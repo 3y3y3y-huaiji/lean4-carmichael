@@ -95,3 +95,46 @@ Integrity mode: development
 - [ ] `Carmichael.lean` 存在于工作目录且语法正确，严格遵循题目脚手架结构。
 - [ ] 文件中不包含任何 `sorry` 占位符或未证明分支。
 - [ ] 在工作目录下执行 `lake build`，退出码为 0，无未捕获的编译错误或内核警告。
+
+## 2026-09-09T16:26:05Z
+
+This is a single self-contained fix; keep it small and focused.
+将当前 Lean 4 项目整理为符合开源规范标准的仓库，包含代码风格重构、专业 README、双许可证（Apache-2.0 OR MulanPSL-2.0）、CI 工作流及规范 Git 提交。
+
+Working directory: c:\Users\安卓人\Documents\antigravity\ai for math
+Integrity mode: development
+
+## Requirements
+
+### R1. Carmichael.lean 代码重构与风格规范
+1. 对证明步骤进行适度 Golf 化（精简冗余变量与多余的 have 语句）；
+2. 增加规范头部双许可证版权注释（Apache-2.0 OR MulanPSL-2.0）与模块说明（`/-! ... -/`）；
+3. 明确引用 Mathlib4 中 `Mathlib.NumberTheory.FermatPsp` 留下的空缺说明；
+4. 为 `Carmichael` 定义及各引理补充标准的英文 `/-- ... -/` Docstrings；
+5. 执行 `lake env lean -D warningAsError=true Carmichael.lean` 返回码必须为 0，且 `#print axioms carmichael_561` 仅依赖内核基础公理。
+
+### R2. 编写专业级 README.md
+创建标准英文为主并附核心中文对照说明的 `README.md`，包含：
+1. **Title & Badges**：项目名称与构建/双许可证徽标（Apache-2.0 / MulanPSL-2.0）；
+2. **Background & Motivation**：说明费马伪素数背景及填补 `Mathlib.NumberTheory.FermatPsp` 定义空白的动机；
+3. **Formalized Results**：清晰列出所定义的概念（`Nat.Carmichael`）与证明的主定理（`carmichael_561`）；
+4. **Build & Verify Instructions**：给出单行复现命令（如何构建及通过 `#print axioms` 验证证明真实性）；
+5. **License Section**：明确阐明双许可证机制（Apache-2.0 OR MulanPSL-2.0）。
+
+### R3. 补充标准基础设施文件
+1. 创建双许可证文本文件：`LICENSE-APACHE`（Apache License 2.0）与 `LICENSE-MULAN`（MulanPSL-2.0），根目录 `LICENSE` 声明双授权条款；
+2. 检查并确保项目根目录包含正确的 `lean-toolchain`；
+3. 创建 `.github/workflows/lean_build.yml` GitHub Actions 流水线，在 Ubuntu 环境下自动运行 `lake build`。
+
+### R4. 规范化 Git 本地提交
+执行规范化 Commit：
+`git commit -m "feat(NumberTheory): formalize Carmichael numbers and 561 counterexample with dual license"`
+
+## Acceptance Criteria
+
+### 工程与形式化标准
+- [ ] `Carmichael.lean` 零警告通过严格检查：`lake env lean -D warningAsError=true Carmichael.lean` 返回码 0。
+- [ ] 内核公理检查 `#print axioms carmichael_561` 无 `sorryAx` 且仅依赖 `[propext, Classical.choice, Quot.sound]`。
+- [ ] 双许可证文件（`LICENSE` / `LICENSE-APACHE` / `LICENSE-MULAN`）完整规范。
+- [ ] `README.md` 和 `.github/workflows/lean_build.yml` 完整可用。
+- [ ] 本地 Git 提交完成且 `git status` 显示工作树干净。
