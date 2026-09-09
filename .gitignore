@@ -1,0 +1,5 @@
+.lake/
+.agents/
+*.olean
+*.ilean
+*.c
