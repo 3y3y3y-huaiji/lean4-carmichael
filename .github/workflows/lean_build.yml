@@ -36,11 +36,16 @@ jobs:
       - name: Strict Verification of Carmichael.lean
         run: lake env lean -D warningAsError=true Carmichael.lean
 
+      - name: Strict Verification of Carmichael/Korselt.lean
+        run: lake env lean -D warningAsError=true Carmichael/Korselt.lean
+
       - name: Kernel Axioms Verification
         run: |
           OUTPUT=$(lake env lean --stdin << 'EOF'
           import Carmichael
+          import Carmichael.Korselt
           #print axioms carmichael_561
+          #print axioms carmichael_iff_korselt
           EOF
           )
           echo "$OUTPUT"
@@ -54,5 +59,9 @@ jobs:
           fi
           if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_561' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
             echo "Error: Theorem Nat.carmichael_561 depends on unexpected axioms: $OUTPUT"
+            exit 1
+          fi
+          if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_iff_korselt' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
+            echo "Error: Theorem Nat.carmichael_iff_korselt depends on unexpected axioms: $OUTPUT"
             exit 1
           fi
