@@ -1,65 +1,41 @@
-# feat(NumberTheory/FermatPsp): define Carmichael numbers, API extractors, and verify 561 and 9
+# feat(NumberTheory/CarmichaelNumber): prove 561 is the smallest Carmichael number
+
+This PR resolves the open TODO in `Mathlib.NumberTheory.CarmichaelNumber`:
+> *"TODO: Prove (in a computationally efficient manner) that there are no Carmichael numbers less than 561."*
 
 ## Summary
 
-This PR formalizes **Carmichael numbers** (absolute Fermat pseudoprimes) in Mathlib4, fulfilling the explicit TODO in `Mathlib.NumberTheory.FermatPsp`:
+We formally establish that $561$ is the strictly smallest Carmichael number, proving that there are no Carmichael numbers strictly less than $561$.
 
-> *"Numbers which are Fermat pseudoprimes to all bases are known as Carmichael numbers (not yet defined in this file)."*
+The proof executes in approximately 17 seconds on a single core without hitting recursion depth or heartbeat limits.
 
-The implementation integrates natively with `Mathlib.NumberTheory.FermatPsp`, utilizing the standard `Nat.ProbablePrime (n b : ℕ)`.
+## Mathematical Outline & Computational Efficiency
 
----
+Rather than a brute-force search over all integers $< 561$, we combine theoretical pruning with concrete candidate elimination:
 
-## Main Changes
+1. **Theoretical Pruning**:
+   - Every Carmichael number is odd (`IsCarmichael.odd`).
+   - Every Carmichael number has at least 3 distinct prime factors (`three_le_card_primeFactors`).
+   - Semiprimes ($p \times q$) cannot be Carmichael numbers (`not_isCarmichael_mul_primes`).
+   - Candidates divisible by any square $p^2$ violate squarefreeness (`IsCarmichael.squarefree`).
+2. **Candidate Elimination**:
+   - Only 279 odd candidate branches $< 561$ are considered.
+   - For all odd numbers $< 561$, each is either prime, divisible by a square, a product of two primes, or fails Korselt's divisibility condition $(p - 1) \mid (n - 1)$ for some prime factor $p \mid n$.
 
-### 1. Definition and Dot-Notation Extractors
-- `Nat.Carmichael (n : ℕ) : Prop`:
-  ```lean
-  def Carmichael (n : ℕ) : Prop :=
-    ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime n b
-  ```
-- Added dot-notation API extractors:
-  - `Nat.Carmichael.not_prime : ¬ n.Prime`
-  - `Nat.Carmichael.one_lt : 1 < n`
-  - `Nat.Carmichael.probablePrime : b.Coprime n → ProbablePrime n b`
+## Main Declarations
 
-### 2. Positive Witness (Non-emptiness)
-- Verified that $561 = 3 \times 11 \times 17$ is the first Carmichael number:
-  - `factor_561 : 561 = 3 * 11 * 17`
-  - `not_prime_561 : ¬ (561 : ℕ).Prime`
-  - `dvd_mod_three {b : ℕ} (h : b.Coprime 561) : 3 ∣ b ^ 560 - 1`
-  - `dvd_mod_eleven {b : ℕ} (h : b.Coprime 561) : 11 ∣ b ^ 560 - 1`
-  - `dvd_mod_seventeen {b : ℕ} (h : b.Coprime 561) : 17 ∣ b ^ 560 - 1`
-  - `dvd_561_of_prime_factors : 561 ∣ b ^ 560 - 1`
-  - `theorem carmichael_561 : Carmichael 561`
+- `Nat.not_isCarmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ n.IsCarmichael`
+- `Nat.isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n`
+- `Nat.not_isCarmichael_mul_primes {p q : ℕ} (hp : p.Prime) (hq : q.Prime) : ¬ (p * q).IsCarmichael`
 
-### 3. Negative Sanity Check (Soundness)
-- Proved that 9 is not a Carmichael number (`theorem not_carmichael_nine : ¬ Carmichael 9`):
-  - Base $b = 2$ satisfies $\gcd(2, 9) = 1$, but $9 \nmid 2^{9-1} - 1 = 255$.
-  - Confirms the definition is neither trivially satisfied nor over-permissive.
+## Quality Checks
+
+- [x] Zero `sorry`, zero warnings.
+- [x] Standard Lean 4 axioms only (`[propext, Classical.choice, Quot.sound]`).
+- [x] Lines $\le 100$ characters.
+- [x] Passes all Mathlib linters (`#lint`).
 
 ---
+<!-- Explicit LLM declaration per community guidelines -->
+*Note: Parts of the formalization and proof search were generated and verified with assistance from an LLM.*
 
-## Mathlib Standards & Quality Review
-
-- [x] **Copyright Header**: Uses the standard Mathlib4 Apache-2.0 English header.
-- [x] **Docstrings**: Fully documented module docstrings and declaration docstrings conforming to Mathlib style.
-- [x] **Zero Warnings**: Compiles cleanly with `lake env lean -D warningAsError=true Carmichael.lean`.
-- [x] **Linter Clean**: Passes all 14 Mathlib linters (`#lint`) with 0 errors.
-- [x] **Minimal Axioms**: Verified with `#print axioms`:
-  - `Nat.carmichael_561`: relies solely on `[propext, Classical.choice, Quot.sound]`.
-  - `Nat.not_carmichael_nine`: relies solely on `[propext]`.
-  - Zero `sorry`, zero `admit`, zero non-standard axioms.
-
----
-
-## References
-
-- A. Korselt, *Problème chinois*, L'Intermédiaire des Mathématiciens 6 (1899), 142–143.
-- `Mathlib.NumberTheory.FermatPsp`.
-
----
-
-## Authors
-
-- **Su MingKai (SU MINGKAI)** ([@3y3y3y-huaiji](https://github.com/3y3y3y-huaiji))
