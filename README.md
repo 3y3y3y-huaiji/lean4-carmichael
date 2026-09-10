@@ -108,6 +108,12 @@ See [PR_DESCRIPTION.md](PR_DESCRIPTION.md) for the upstream Pull Request draft c
 
 ---
 
+## Author
+
+- **Su MingKai (SU MINGKAI)** — GitHub: [@3y3y3y-huaiji](https://github.com/3y3y3y-huaiji)
+
+---
+
 ## License
 
 This project is dual-licensed under either:

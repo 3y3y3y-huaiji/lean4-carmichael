@@ -105,6 +105,10 @@ lake env lean -D warningAsError=true Carmichael.lean
 
 详见 [PR_DESCRIPTION.md](PR_DESCRIPTION.md)。
 
+## 作者 (Author)
+
+- **苏明凯 (Su MingKai / SU MINGKAI)** — GitHub: [@3y3y3y-huaiji](https://github.com/3y3y3y-huaiji)
+
 ---
 
 ## 开源许可证 (License)

@@ -1,7 +1,7 @@
 /-
-Copyright (c) 2026 Carmichael Formalization Contributors. All rights reserved.
+Copyright (c) 2026 Su MingKai. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
-Authors: Carmichael Formalization Contributors
+Authors: Su MingKai
 -/
 import Mathlib.NumberTheory.FermatPsp
 import Mathlib.Tactic.NormNum.Prime

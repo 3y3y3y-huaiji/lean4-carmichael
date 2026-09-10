@@ -57,3 +57,9 @@ The implementation integrates natively with `Mathlib.NumberTheory.FermatPsp`, ut
 
 - A. Korselt, *Problème chinois*, L'Intermédiaire des Mathématiciens 6 (1899), 142–143.
 - `Mathlib.NumberTheory.FermatPsp`.
+
+---
+
+## Authors
+
+- **Su MingKai (SU MINGKAI)** ([@3y3y3y-huaiji](https://github.com/3y3y3y-huaiji))
