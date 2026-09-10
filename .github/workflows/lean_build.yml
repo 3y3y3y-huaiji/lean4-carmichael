@@ -31,7 +31,9 @@ jobs:
         run: lake exe cache get
 
       - name: Lake Build
-        run: lake build
+        run: |
+          lake build
+          lake build Carmichael.Korselt
 
       - name: Strict Verification of Carmichael.lean
         run: lake env lean -D warningAsError=true Carmichael.lean
@@ -41,27 +43,24 @@ jobs:
 
       - name: Kernel Axioms Verification
         run: |
-          OUTPUT=$(lake env lean --stdin << 'EOF'
+          cat << 'EOF' > check_axioms.lean
           import Carmichael
           import Carmichael.Korselt
-          #print axioms carmichael_561
-          #print axioms carmichael_iff_korselt
+          #print axioms Nat.carmichael_561
+          #print axioms Nat.carmichael_iff_korselt
           EOF
-          )
+          OUTPUT=$(lake env lean check_axioms.lean)
+          echo "Axioms check output:"
           echo "$OUTPUT"
           if echo "$OUTPUT" | grep -q "sorryAx"; then
             echo "Error: Proof depends on sorryAx"
             exit 1
           fi
-          if ! echo "$OUTPUT" | grep -q "Nat.carmichael_561"; then
-            echo "Error: Theorem Nat.carmichael_561 was not verified in axiom check"
-            exit 1
-          fi
           if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_561' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Theorem Nat.carmichael_561 depends on unexpected axioms: $OUTPUT"
+            echo "Error: Unexpected axioms for carmichael_561: $OUTPUT"
             exit 1
           fi
           if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_iff_korselt' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Theorem Nat.carmichael_iff_korselt depends on unexpected axioms: $OUTPUT"
+            echo "Error: Unexpected axioms for carmichael_iff_korselt: $OUTPUT"
             exit 1
           fi
