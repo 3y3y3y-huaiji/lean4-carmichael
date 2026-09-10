@@ -54,9 +54,8 @@ theorem isCarmichael_iff_carmichael {n : ℕ} : n.IsCarmichael ↔ Nat.Carmichae
     subst this
     exact hp Nat.prime_two
 
-/-- Korselt's criterion for IsCarmichael: 
- is Carmichael iff 2 < n, composite,
-squarefree, and p - 1 ∣ n - 1 for all prime divisors p ∣ n. -/
+/-- Korselt's criterion for IsCarmichael: `n` is Carmichael iff `2 < n`, composite,
+squarefree, and `p - 1 ∣ n - 1` for all prime divisors `p ∣ n`. -/
 theorem isCarmichael_iff_korselt {n : ℕ} :
     n.IsCarmichael ↔ 2 < n ∧ ¬ n.Prime ∧ Squarefree n ∧
       ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1) := by
@@ -131,16 +130,14 @@ theorem not_isCarmichael_mul_primes {p q : ℕ} (hp : p.Prime) (hq : q.Prime) (h
   have hle : q - 1 ≤ p - 1 := Nat.le_of_dvd hpos hdiv_sub
   omega
 
-/-- If p * p ∣ n with p non-unit, then 
- is not Carmichael (fails squarefreeness). -/
+/-- If `p * p ∣ n` with `p` non-unit, then `n` is not Carmichael (fails squarefreeness). -/
 theorem not_isCarmichael_of_sq_dvd {n p : ℕ} (hpn : p * p ∣ n) (hp : ¬ IsUnit p) :
     ¬ n.IsCarmichael := by
   intro h
   have hk := isCarmichael_iff_korselt.mp h
   exact hp (hk.2.2.1 p hpn)
 
-/-- If a prime factor p ∣ n does not satisfy p - 1 ∣ n - 1, then 
- is not Carmichael. -/
+/-- If a prime factor `p ∣ n` does not satisfy `p - 1 ∣ n - 1`, then `n` is not Carmichael. -/
 theorem not_isCarmichael_of_prime_factor_not_dvd {n p : ℕ}
     (hp : p.Prime) (hpn : p ∣ n) (hndiv : ¬ (p - 1 ∣ n - 1)) :
     ¬ n.IsCarmichael := by
@@ -148,528 +145,230 @@ theorem not_isCarmichael_of_prime_factor_not_dvd {n p : ℕ}
   have hk := isCarmichael_iff_korselt.mp h
   exact hndiv (hk.2.2.2 p hp hpn)
 
+/-- Small prime divisors up to $\sqrt{561} < 24$. -/
+def testPrimes : List ℕ := [3, 5, 7, 11, 13, 17, 19, 23]
+
+/-- Fast computable prime decider for natural numbers up to 561. -/
+def isPrimeDec (n : ℕ) : Bool :=
+  if n < 2 then false
+  else if n = 2 then true
+  else if n % 2 = 0 then false
+  else testPrimes.all (fun p => decide (p ≥ n) || decide (n % p ≠ 0))
+
+/-- Auxiliary lemma: any prime between 3 and 23 is in `testPrimes`. -/
+theorem prime_le_23_mem_testPrimes {p : ℕ} (hp : p.Prime) (h3 : 3 ≤ p) (h23 : p ≤ 23) :
+    p ∈ testPrimes := by
+  interval_cases p <;> first | decide | (revert hp; decide)
+
+/-- Correctness and soundness of `isPrimeDec`: for `n < 561`, evaluates to `true`
+iff `n` is prime. -/
+theorem isPrimeDec_prime {n : ℕ} (hn : n < 561) (h : isPrimeDec n = true) : Nat.Prime n := by
+  unfold isPrimeDec at h
+  split_ifs at h with hlt h2 heven
+  · subst h2
+    exact Nat.prime_two
+  · by_contra hnp
+    have h2le : 2 ≤ n := by omega
+    have hp_prime : (Nat.minFac n).Prime := Nat.minFac_prime (by omega)
+    have hp_dvd : Nat.minFac n ∣ n := Nat.minFac_dvd n
+    have hp_ne2 : Nat.minFac n ≠ 2 := by
+      intro hp2
+      have : 2 ∣ n := hp2 ▸ hp_dvd
+      have : n % 2 = 0 := Nat.mod_eq_zero_of_dvd this
+      contradiction
+    have hp_ge3 : 3 ≤ Nat.minFac n := by
+      have := hp_prime.two_le
+      omega
+    have hp_lt : Nat.minFac n < n := (Nat.not_prime_iff_minFac_lt h2le).mp hnp
+    have hdiv_ge2 : 2 ≤ n / Nat.minFac n := by
+      have hmul : n = Nat.minFac n * (n / Nat.minFac n) := (Nat.mul_div_cancel' hp_dvd).symm
+      by_contra! hlt
+      interval_cases (n / Nat.minFac n)
+      · omega
+      · omega
+    have hq : Nat.minFac n ≤ n / Nat.minFac n :=
+      Nat.minFac_le_of_dvd hdiv_ge2 (Nat.div_dvd_of_dvd hp_dvd)
+    have h_mul_div : Nat.minFac n * (n / Nat.minFac n) = n := Nat.mul_div_cancel' hp_dvd
+    have h_sq : Nat.minFac n * Nat.minFac n ≤ n := by
+      have h_le : Nat.minFac n * Nat.minFac n ≤ Nat.minFac n * (n / Nat.minFac n) :=
+        Nat.mul_le_mul_left (Nat.minFac n) hq
+      rwa [h_mul_div] at h_le
+    have hp_le_23 : Nat.minFac n ≤ 23 := by
+      by_contra! h24
+      have h24_le : 24 ≤ Nat.minFac n := by omega
+      have h576 : 24 * 24 ≤ Nat.minFac n * Nat.minFac n := Nat.mul_le_mul h24_le h24_le
+      omega
+    have hp_mem : Nat.minFac n ∈ testPrimes :=
+      prime_le_23_mem_testPrimes hp_prime hp_ge3 hp_le_23
+    rw [List.all_eq_true] at h
+    have hspec := h (Nat.minFac n) hp_mem
+    simp only [Bool.or_eq_true, decide_eq_true_iff] at hspec
+    rcases hspec with hge | hne
+    · omega
+    · rw [Nat.dvd_iff_mod_eq_zero] at hp_dvd
+      exact hne hp_dvd
+
+/-- Full equivalence of `isPrimeDec` with `Nat.Prime` for `n < 561`. -/
+theorem isPrimeDec_iff {n : ℕ} (hn : n < 561) : isPrimeDec n = true ↔ Nat.Prime n := by
+  constructor
+  · exact isPrimeDec_prime hn
+  · intro hp
+    unfold isPrimeDec
+    split_ifs with hlt h2 heven
+    · have := hp.two_le
+      omega
+    · rfl
+    · have ho := hp.eq_two_or_odd
+      rcases ho with rfl | ho
+      · omega
+      · omega
+    · rw [List.all_eq_true]
+      intro p hp_mem
+      simp only [Bool.or_eq_true, decide_eq_true_iff]
+      by_cases hle : p < n
+      · right
+        intro hmod
+        have hdvd : p ∣ n := Nat.dvd_of_mod_eq_zero hmod
+        have heq := (Nat.dvd_prime hp).mp hdvd
+        rcases heq with rfl | rfl
+        · revert hp_mem
+          decide
+        · omega
+      · left
+        omega
+
+/-- Sieve of Eratosthenes up to `limit` as a boolean array using `isPrimeDec`. -/
+def eratosthenesSieve (limit : ℕ) : Array Bool :=
+  Array.ofFn (fun (i : Fin (limit + 1)) => isPrimeDec i.val)
+
+/-- Correctness of `eratosthenesSieve`: index `n` is `true` if and only if `n` is prime. -/
+theorem eratosthenesSieve_getElem {limit n : ℕ} (hlim : limit < 561) (hn : n ≤ limit) :
+    (eratosthenesSieve limit)[n]'(by simp [eratosthenesSieve]; omega) = true ↔ Nat.Prime n := by
+  simp only [eratosthenesSieve, Array.getElem_ofFn]
+  exact isPrimeDec_iff (by omega)
+
+/-- Certificate witnessing why a natural number `n` cannot be a Carmichael number. -/
+inductive CarmichaelCert where
+  | leTwo : CarmichaelCert
+  | even : CarmichaelCert
+  | prime : CarmichaelCert
+  | sqDiv (p : ℕ) : CarmichaelCert
+  | korseltFail (p : ℕ) : CarmichaelCert
+  | fail : CarmichaelCert
+  deriving Repr, DecidableEq
+
+/-- Primes used to detect squared factors for odd numbers below 561. -/
+def sqPrimes : List ℕ := testPrimes
+
+/-- Primes used to detect Korselt criterion violations for odd composite numbers below 561. -/
+def korseltPrimes : List ℕ :=
+  [3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79,
+   83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
+   173, 179, 181]
+
+/-- Finds an odd prime `p` such that `p^2 ∣ n`. -/
+def findSqDiv (n : ℕ) : Option ℕ :=
+  sqPrimes.find? (fun p => n % (p * p) == 0)
+
+/-- Finds an odd prime `p ∣ n` such that `p - 1 ∤ n - 1`. -/
+def findKorseltFail (n : ℕ) : Option ℕ :=
+  korseltPrimes.find? (fun p => p < n && (n % p == 0) && ((n - 1) % (p - 1) != 0))
+
+/-- Generates a non-Carmichael certificate for `n`. -/
+def certify (n : ℕ) : CarmichaelCert :=
+  if n ≤ 2 then .leTwo
+  else if n % 2 == 0 then .even
+  else match findSqDiv n with
+  | some p => .sqDiv p
+  | none => match findKorseltFail n with
+    | some p => .korseltFail p
+    | none => if isPrimeDec n then .prime else .fail
+
+/-- Verifies that a certificate `c` is valid for candidate `n`. -/
+def verifyCert (n : ℕ) (c : CarmichaelCert) : Bool :=
+  match c with
+  | .leTwo => decide (n ≤ 2)
+  | .even => decide (n % 2 = 0)
+  | .prime => isPrimeDec n
+  | .sqDiv p => decide (2 ≤ p) && decide (n % (p * p) = 0)
+  | .korseltFail p =>
+    decide (2 ≤ p) && isPrimeDec p && decide (n % p = 0) && decide ((n - 1) % (p - 1) ≠ 0)
+  | .fail => false
+
+/-- Soundness of certificate verification: any valid certificate implies `n` is not Carmichael. -/
+theorem verifyCert_sound {n : ℕ} (hn : n < 561) {c : CarmichaelCert}
+    (hc : verifyCert n c = true) : ¬ n.IsCarmichael := by
+  intro h
+  cases c with
+  | leTwo =>
+    simp only [verifyCert, decide_eq_true_iff] at hc
+    have h2 := h.1
+    omega
+  | even =>
+    simp only [verifyCert, decide_eq_true_iff] at hc
+    have ho := h.odd
+    rw [Nat.odd_iff] at ho
+    omega
+  | prime =>
+    simp only [verifyCert] at hc
+    have hp := (isPrimeDec_iff hn).mp hc
+    exact h.2.1 hp
+  | sqDiv p =>
+    simp only [verifyCert, Bool.and_eq_true, decide_eq_true_iff] at hc
+    rcases hc with ⟨hp2, hmod⟩
+    have hpn : p * p ∣ n := Nat.dvd_of_mod_eq_zero hmod
+    have hpunit : ¬ IsUnit p := by
+      intro hu
+      have : p = 1 := isUnit_iff_eq_one.mp hu
+      omega
+    exact not_isCarmichael_of_sq_dvd hpn hpunit h
+  | korseltFail p =>
+    simp only [verifyCert, Bool.and_eq_true, decide_eq_true_iff] at hc
+    rcases hc with ⟨⟨⟨hp2, hp_dec⟩, hmod⟩, hmod_ne⟩
+    have h2 := h.1
+    have hpn : p ∣ n := Nat.dvd_of_mod_eq_zero hmod
+    have hp_pos : 0 < p := by omega
+    have hp_le : p ≤ n := Nat.le_of_dvd (by omega) hpn
+    have hp_lt : p < 561 := by omega
+    have hp_prime : p.Prime := (isPrimeDec_iff hp_lt).mp hp_dec
+    have hndiv : ¬ (p - 1 ∣ n - 1) := by
+      rw [Nat.dvd_iff_mod_eq_zero]
+      exact hmod_ne
+    exact not_isCarmichael_of_prime_factor_not_dvd hp_prime hpn hndiv h
+  | fail =>
+    simp only [verifyCert] at hc
+    contradiction
+
+/-- Decides whether candidate `n` is certified non-Carmichael. -/
+def checkCandidate (n : ℕ) : Bool :=
+  verifyCert n (certify n)
+
+/-- Soundness of candidate checking: if `checkCandidate n = true`, then `n` is not Carmichael. -/
+theorem not_isCarmichael_of_checkCandidate {n : ℕ} (hn : n < 561) (h : checkCandidate n = true) :
+    ¬ n.IsCarmichael :=
+  verifyCert_sound hn h
+
+/-- Computational decision procedure verifying that no number strictly below `N` is Carmichael. -/
+def checkCarmichaelBound (N : ℕ) : Bool :=
+  if 561 < N then false
+  else (List.range N).all checkCandidate
+
+/-- Soundness theorem: if `checkCarmichaelBound N = true`, then no `n < N` is Carmichael. -/
+theorem checkCarmichaelBound_sound {N : ℕ} (h : checkCarmichaelBound N = true) :
+    ∀ n < N, ¬ n.IsCarmichael := by
+  intro n hn
+  unfold checkCarmichaelBound at h
+  split_ifs at h with hgt
+  rw [List.all_eq_true] at h
+  have h_lt : n < 561 := by omega
+  exact not_isCarmichael_of_checkCandidate h_lt (h n (List.mem_range.mpr hn))
+
+set_option maxRecDepth 200000 in
 /-- There are no Carmichael numbers strictly less than 561. -/
 theorem not_isCarmichael_of_lt_561 {n : ℕ} (hn : n < 561) : ¬ n.IsCarmichael := by
-  intro h
-  have ho := h.odd
-  rcases ho with ⟨k, rfl⟩
-  have hk : k < 280 := by omega
-  interval_cases k
-  · have := h.1
-    omega
+  have h_dec : checkCarmichaelBound 561 = true := by decide
+  exact checkCarmichaelBound_sound h_dec n hn
 
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 7 + 1 = 3 * 5 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 10 + 1 = 3 * 7 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 16 + 1 = 3 * 11 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 17 + 1 = 5 * 7 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 19 + 1 = 3 * 13 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 7) (by decide) (by decide) h
-  · have ht : 2 * 25 + 1 = 3 * 17 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 27 + 1 = 5 * 11 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 28 + 1 = 3 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 32 + 1 = 5 * 13 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 34 + 1 = 3 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 38 + 1 = 7 * 11 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 42 + 1 = 5 * 17 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 43 + 1 = 3 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 45 + 1 = 7 * 13 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 46 + 1 = 3 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 47 + 1 = 5 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 55 + 1 = 3 * 37 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 57 + 1 = 5 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 59 + 1 = 7 * 17 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 11) (by decide) (by decide) h
-  · have ht : 2 * 61 + 1 = 3 * 41 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 64 + 1 = 3 * 43 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 66 + 1 = 7 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 70 + 1 = 3 * 47 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 71 + 1 = 11 * 13 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 72 + 1 = 5 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 7) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 77 + 1 = 5 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 79 + 1 = 3 * 53 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 80 + 1 = 7 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 11)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 13) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 88 + 1 = 3 * 59 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 91 + 1 = 3 * 61 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 92 + 1 = 5 * 37 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 93 + 1 = 11 * 17 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 5)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 100 + 1 = 3 * 67 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 101 + 1 = 7 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 102 + 1 = 5 * 41 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 104 + 1 = 11 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 106 + 1 = 3 * 71 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 107 + 1 = 5 * 43 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 108 + 1 = 7 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 109 + 1 = 3 * 73 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 110 + 1 = 13 * 17 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 117 + 1 = 5 * 47 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 118 + 1 = 3 * 79 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 7) (by decide) (by decide) h
-  · have ht : 2 * 123 + 1 = 13 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 124 + 1 = 3 * 83 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 126 + 1 = 11 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 5)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 129 + 1 = 7 * 37 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 132 + 1 = 5 * 53 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 133 + 1 = 3 * 89 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 19)
-      (by norm_num) (by decide) (by decide) h
-  · have ht : 2 * 143 + 1 = 7 * 41 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 17) (by decide) (by decide) h
-  · have ht : 2 * 145 + 1 = 3 * 97 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 147 + 1 = 5 * 59 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 149 + 1 = 13 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 150 + 1 = 7 * 43 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 151 + 1 = 3 * 101 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 152 + 1 = 5 * 61 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 154 + 1 = 3 * 103 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 159 + 1 = 11 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 160 + 1 = 3 * 107 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 161 + 1 = 17 * 19 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 163 + 1 = 3 * 109 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 164 + 1 = 7 * 47 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 167 + 1 = 5 * 67 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 169 + 1 = 3 * 113 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 170 + 1 = 11 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 7) (by decide) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 23)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 177 + 1 = 5 * 71 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 19) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 11) (by decide) (by decide) h
-  · have ht : 2 * 182 + 1 = 5 * 73 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 185 + 1 = 7 * 53 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 188 + 1 = 13 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 190 + 1 = 3 * 127 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 11)
-      (by norm_num) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 195 + 1 = 17 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 196 + 1 = 3 * 131 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 197 + 1 = 5 * 79 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 201 + 1 = 13 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 203 + 1 = 11 * 37 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 205 + 1 = 3 * 137 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 206 + 1 = 7 * 59 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 207 + 1 = 5 * 83 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 208 + 1 = 3 * 139 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 213 + 1 = 7 * 61 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 11)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 5)
-      (by norm_num) (by decide) (by decide) h
-  · have ht : 2 * 218 + 1 = 19 * 23 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 222 + 1 = 5 * 89 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 223 + 1 = 3 * 149 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 225 + 1 = 11 * 41 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 226 + 1 = 3 * 151 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 5)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 31)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 234 + 1 = 7 * 67 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 235 + 1 = 3 * 157 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 236 + 1 = 11 * 43 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 240 + 1 = 13 * 37 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 7)
-      (by norm_num) (by decide) (by decide) h
-  · have ht : 2 * 242 + 1 = 5 * 97 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 244 + 1 = 3 * 163 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 246 + 1 = 17 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 248 + 1 = 7 * 71 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 250 + 1 = 3 * 167 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 252 + 1 = 5 * 101 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 13) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 255 + 1 = 7 * 73 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 257 + 1 = 5 * 103 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 258 + 1 = 11 * 47 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 259 + 1 = 3 * 173 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 5) (by decide) (by decide) h
-  · have ht : 2 * 263 + 1 = 17 * 31 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 23) (by decide) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 266 + 1 = 13 * 41 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 267 + 1 = 5 * 107 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 268 + 1 = 3 * 179 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_sq_dvd (p := 7) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 271 + 1 = 3 * 181 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 272 + 1 = 5 * 109 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · exact not_isCarmichael_of_sq_dvd (p := 3) (by decide) (by decide) h
-  · have ht : 2 * 275 + 1 = 19 * 29 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · have ht : 2 * 276 + 1 = 7 * 79 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
-  · exact not_isCarmichael_of_prime_factor_not_dvd (p := 5)
-      (by norm_num) (by decide) (by decide) h
-  · exact h.2.1 (by norm_num)
-  · have ht : 2 * 279 + 1 = 13 * 43 := rfl
-    rw [ht] at h
-    exact not_isCarmichael_mul_primes (by norm_num) (by norm_num) (by decide) h
 /-- 561 is the minimal Carmichael number. -/
 theorem isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n := by
   by_contra! h
@@ -689,5 +388,6 @@ end Nat
 export Nat (IsCarmichael isCarmichael_iff_carmichael isCarmichael_iff_korselt
   not_isCarmichael_mul_primes not_isCarmichael_of_sq_dvd
   not_isCarmichael_of_prime_factor_not_dvd not_isCarmichael_of_lt_561
-  isCarmichael_min not_carmichael_of_lt_561 carmichael_min)
+  isCarmichael_min not_carmichael_of_lt_561 carmichael_min
+  eratosthenesSieve checkCarmichaelBound checkCarmichaelBound_sound)
 
