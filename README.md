@@ -67,6 +67,25 @@ The main formalizations are located in [`Carmichael.lean`](Carmichael.lean):
   ```
   Formally establishes that 9 fails the Fermat test for base $b = 2$ ($\gcd(2, 9) = 1$ but $9 \nmid 2^8 - 1$).
 
+### 4. Korselt's Criterion (1899)
+Located in [`Carmichael/Korselt.lean`](Carmichael/Korselt.lean), bridging `Nat.Carmichael` with Mathlib's `ArithmeticFunction.carmichael` ($\lambda$ function):
+- **Step 1**:
+  ```lean
+  theorem carmichael_iff_carmichael_dvd (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
+      Nat.Carmichael n ↔ ArithmeticFunction.carmichael n ∣ n - 1
+  ```
+- **Step 2**:
+  ```lean
+  theorem carmichael_dvd_iff_korselt (n : ℕ) (hn : 1 < n) :
+      ArithmeticFunction.carmichael n ∣ n - 1 ↔
+      Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
+  ```
+- **Step 3 (Main Theorem)**:
+  ```lean
+  theorem carmichael_iff_korselt (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
+      Nat.Carmichael n ↔ Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
+  ```
+
 ---
 
 ## Build & Verify Instructions

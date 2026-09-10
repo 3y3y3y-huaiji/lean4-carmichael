@@ -69,6 +69,25 @@ $$b^{p-1} \equiv 1 \pmod p$$
   ```
   证明 9 不是卡迈克尔数（取底数 $b = 2$，$\gcd(2, 9) = 1$ 但 $9 \nmid 2^8 - 1$）。
 
+### 4. 科瑟尔特准则（Korselt's Criterion 1899）
+位于 [`Carmichael/Korselt.lean`](Carmichael/Korselt.lean)，将 `Nat.Carmichael` 与 Mathlib 官方预置的卡迈克尔 $\lambda$ 函数（`ArithmeticFunction.carmichael`）桥接闭环：
+- **Step 1（卡迈克尔数与群指数整除等价）**：
+  ```lean
+  theorem carmichael_iff_carmichael_dvd (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
+      Nat.Carmichael n ↔ ArithmeticFunction.carmichael n ∣ n - 1
+  ```
+- **Step 2（群指数整除与无平方因子/因数条件等价）**：
+  ```lean
+  theorem carmichael_dvd_iff_korselt (n : ℕ) (hn : 1 < n) :
+      ArithmeticFunction.carmichael n ∣ n - 1 ↔
+      Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
+  ```
+- **Step 3（主定理：科瑟尔特准则）**：
+  ```lean
+  theorem carmichael_iff_korselt (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
+      Nat.Carmichael n ↔ Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
+  ```
+
 ---
 
 ## 本地构建与复现指南
