@@ -1,4 +1,4 @@
-# Lean 4 卡迈克尔数形式化验证库
+# Lean 4 卡迈克尔数形式化验证库（Mathlib4 官方合入标准）
 
 [English](README.md) | [简体中文](README_zh.md)
 
@@ -8,7 +8,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL_2.0-orange.svg)](LICENSE-MULAN)
 
-本项目在交互式定理证明器 **Lean 4** 与数学库 **Mathlib4** 中，完成了**卡迈克尔数（Carmichael numbers，绝对费马伪素数）**的形式化定义，并严格机器验证了首个经典反例 **561** 是卡迈克尔数。
+本项目在交互式定理证明器 **Lean 4** 与数学库 **Mathlib4** 中，完成了**卡迈克尔数（Carmichael numbers，绝对费马伪素数）**的原生形式化定义，并严格机器验证了正向首例 **561** 是卡迈克尔数，以及负向健全性反例 **9** 不是卡迈克尔数，完全对齐 Mathlib4 官方 PR 标准。
 
 ---
 
@@ -24,9 +24,11 @@ $$b^{p-1} \equiv 1 \pmod p$$
 > （对所有底数均为费马伪素数的数称为卡迈克尔数，本文件中尚未定义。）
 
 本项目正式填补了 Mathlib4 的这一空白：
-1. 给出了符合 Mathlib 社区规范的标准卡迈克尔数定义 `Nat.Carmichael`；
-2. 构造了完整的引理链条，严格形式化证明了 $561 = 3 \times 11 \times 17$ 是卡迈克尔数（`carmichael_561`）；
-3. 证明完全闭环，不依赖任何除 Lean 4 内核三大基础公理之外的公理或 `sorry`。
+1. 直接复用官方原生 `Mathlib.NumberTheory.FermatPsp.ProbablePrime (n b : ℕ)`，不重复造轮子；
+2. 给出标准卡迈克尔数定义 `Nat.Carmichael` 及点号表示法 API 提取器；
+3. 严格形式化证明了 $561 = 3 \times 11 \times 17$ 是卡迈克尔数（`carmichael_561`，正向非空性验证）；
+4. 严格形式化证明了 $9$ 不是卡迈克尔数（`not_carmichael_nine`，负向健全性反例）；
+5. 证明完全闭环，零 `sorry`，且通过全部 14 项 Mathlib `#lint` 检查。
 
 ---
 
@@ -34,15 +36,17 @@ $$b^{p-1} \equiv 1 \pmod p$$
 
 所有核心代码均位于 [`Carmichael.lean`](Carmichael.lean)：
 
-### 1. 核心定义
-- **`Nat.ProbablePrime (b n : ℕ) : Prop`**  
-  自然数 $n$ 关于底数 $b$ 的费马可能素数测试条件，精确定义为 $n \mid b^{n-1} - 1$。
+### 1. 核心定义与 API 提取器
 - **`Nat.Carmichael (n : ℕ) : Prop`**  
-  大于 1 的合数 $n$，且对任意与其互质的底数 $b$，均满足可能素数条件：
+  大于 1 的合数 $n$，且对任意与其互质的底数 $b$，均满足费马可能素数条件：
   ```lean
   def Carmichael (n : ℕ) : Prop :=
-    ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime b n
+    ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime n b
   ```
+- **点号表示法提取器：**
+  - `lemma Carmichael.not_prime {n : ℕ} (h : Carmichael n) : ¬ n.Prime`
+  - `lemma Carmichael.one_lt {n : ℕ} (h : Carmichael n) : 1 < n`
+  - `lemma Carmichael.probablePrime {n : ℕ} (h : Carmichael n) {b : ℕ} (hb : b.Coprime n) : ProbablePrime n b`
 
 ### 2. 辅助引理
 - `factor_561 : 561 = 3 * 11 * 17`：561 的素因数分解。
@@ -50,11 +54,19 @@ $$b^{p-1} \equiv 1 \pmod p$$
 - `dvd_mod_three`：若 $\gcd(b, 561) = 1$，则 $3 \mid b^{560} - 1$。
 - `dvd_mod_eleven`：若 $\gcd(b, 561) = 1$，则 $11 \mid b^{560} - 1$。
 - `dvd_mod_seventeen`：若 $\gcd(b, 561) = 1$，则 $17 \mid b^{560} - 1$。
-- `dvd_561_of_prime_factors`：利用两两互质素因子的整除性合并定理，由模 3、11、17 同余整除导出 $561 \mid b^{560} - 1$。
+- `dvd_561_of_prime_factors`：由模 3、11、17 同余整除导出 $561 \mid b^{560} - 1$。
 
 ### 3. 主定理
-- **`theorem carmichael_561 : Carmichael 561`**（亦导出为 `Nat.carmichael_561`）：  
-  正式确立 561 是卡迈克尔数。
+- **正向非空性实例**：
+  ```lean
+  theorem carmichael_561 : Carmichael 561
+  ```
+  证明 561 是卡迈克尔数。
+- **负向健全性反例**：
+  ```lean
+  theorem not_carmichael_nine : ¬ Carmichael 9
+  ```
+  证明 9 不是卡迈克尔数（取底数 $b = 2$，$\gcd(2, 9) = 1$ 但 $9 \nmid 2^8 - 1$）。
 
 ---
 
@@ -69,40 +81,29 @@ $$b^{p-1} \equiv 1 \pmod p$$
 lake build
 ```
 
-### 2. 严格零警告类型检查
+### 2. 严格零警告类型检查与 Linter 检验
 ```bash
 lake env lean -D warningAsError=true Carmichael.lean
 ```
 
-### 3. 独立检验内核公理（验证证明无 sorry / 无作弊公理）
-可在终端中直接查询 Lean 4 内核，确认 `carmichael_561` 依赖的公理列表：
-
-**Linux / macOS (Bash):**
-```bash
-printf "import Carmichael\n#print axioms carmichael_561\n" | lake env lean --stdin
-```
-
-**Windows (PowerShell):**
+### 3. 检验内核公理（验证证明无 sorry / 无作弊公理）
 ```powershell
-@('import Carmichael', '#print axioms carmichael_561') | lake env lean --stdin
+lake env lean -D warningAsError=true Carmichael.lean
 ```
 
 **预期输出：**
 ```text
 'Nat.carmichael_561' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Nat.not_carmichael_nine' depends on axioms: [propext]
+-- Found 0 errors in 12 declarations (plus 0 automatically generated ones) in the current file with 14 linters
+-- All linting checks passed!
 ```
-输出仅包含 Lean 4 官方内核三大标准逻辑公理（命题外延性、选择公理、商类型健全性），**无 `sorryAx`，无任何自定义公理**，证明绝对严密。
 
 ---
 
-## 持续集成 (CI)
+## Mathlib4 官方 PR 描述草稿
 
-仓库已配置标准的 GitHub Actions 流水线 [`.github/workflows/lean_build.yml`](.github/workflows/lean_build.yml)，在 Ubuntu 环境下对每次提交进行自动构建与公理检验：
-1. 基于 `elan` 自动配置指定版本工具链；
-2. 拉取 Mathlib 预编译缓存；
-3. 执行 `lake build`；
-4. 开启 `-D warningAsError=true` 进行严格无警告语法检查；
-5. 自动断言内核公理依赖，确保构建与证明真实性。
+详见 [PR_DESCRIPTION.md](PR_DESCRIPTION.md)。
 
 ---
 
@@ -112,5 +113,3 @@ printf "import Carmichael\n#print axioms carmichael_561\n" | lake env lean --std
 
 - **Apache License 2.0**（参见 [LICENSE-APACHE](LICENSE-APACHE)）
 - **木兰宽松许可证 第2版（MulanPSL-2.0）**（参见 [LICENSE-MULAN](LICENSE-MULAN)）
-
-双许可架构既完全兼容国际 Mathlib 上游生态，又符合国内开源法律与版权合规要求。

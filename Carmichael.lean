@@ -1,55 +1,41 @@
 /-
 Copyright (c) 2026 Carmichael Formalization Contributors. All rights reserved.
-SPDX-License-Identifier: Apache-2.0 OR MulanPSL-2.0
-Released under Apache 2.0 OR MulanPSL-2.0 license as described in the file LICENSE.
+Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Carmichael Formalization Contributors
 -/
-import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.NumberTheory.FermatPsp
 import Mathlib.Tactic.NormNum.Prime
-import Mathlib.FieldTheory.Finite.Basic
 
 set_option exponentiation.threshold 1000
 
 /-!
-# Carmichael Numbers and the Counterexample 561
+# Carmichael Numbers
 
-This module provides the formal definition of Carmichael numbers (absolute Fermat pseudoprimes)
-and formally verifies that 561 is the first Carmichael number.
+This module formalizes Carmichael numbers (absolute Fermat pseudoprimes) and integrates
+directly with `Mathlib.NumberTheory.FermatPsp`.
 
-## Motivation & Mathlib Relation
-
-In `Mathlib.NumberTheory.FermatPsp`, Fermat pseudoprimes are formalized, and the documentation notes:
-> "Numbers which are Fermat pseudoprimes to all bases are known as Carmichael numbers (not yet
-> defined in this file)."
-
-This module addresses that missing definition in Mathlib4 by:
-1. Defining `Nat.ProbablePrime b n` stating that `n ∣ b ^ (n - 1) - 1`.
-2. Defining `Nat.Carmichael n` stating that `n` is a composite natural number `n > 1` such that
-   every base `b` coprime to `n` satisfies the Fermat probable prime condition.
-3. Formally proving `carmichael_561`, showing that 561 is indeed a Carmichael number.
+A Carmichael number is a composite natural number `n > 1` that passes the Fermat primality test
+for all bases `b` coprime to `n`, i.e., `ProbablePrime n b` holds for all `b` with `b.Coprime n`.
 
 ## Main Definitions and Theorems
 
-- `factor_561`: The prime factorization `561 = 3 * 11 * 17`.
-- `not_prime_561`: Proof that 561 is not prime.
-- `dvd_mod_three`: For any `b` coprime to 561, `3 ∣ b ^ 560 - 1`.
-- `dvd_mod_eleven`: For any `b` coprime to 561, `11 ∣ b ^ 560 - 1`.
-- `dvd_mod_seventeen`: For any `b` coprime to 561, `17 ∣ b ^ 560 - 1`.
-- `dvd_561_of_prime_factors`: Combines divisibility by 3, 11, 17 into divisibility by 561.
-- `Nat.ProbablePrime`: Fermat probable primality condition for base `b` and number `n`.
 - `Nat.Carmichael`: Definition of Carmichael numbers.
-- `carmichael_561`: Main theorem establishing that 561 is a Carmichael number.
+- `Nat.Carmichael.not_prime`: A Carmichael number is not prime.
+- `Nat.Carmichael.one_lt`: A Carmichael number is strictly greater than 1.
+- `Nat.Carmichael.probablePrime`: A Carmichael number is a probable prime to any coprime base.
+- `carmichael_561`: Proof that 561 is a Carmichael number (positive witness).
+- `not_carmichael_nine`: Proof that 9 is not a Carmichael number (negative sanity check).
 
 ## References
 
-- Korselt, A. (1899). "Problème chinois". L'Intermédiaire des Mathématiciens.
-- Mathlib4: `Mathlib.NumberTheory.FermatPsp`.
+- A. Korselt, *Problème chinois*, L'Intermédiaire des Mathématiciens 6 (1899), 142–143.
+- `Mathlib.NumberTheory.FermatPsp`.
 -/
 
 /-- Prime factorization of 561: `561 = 3 * 11 * 17`. -/
 lemma factor_561 : 561 = 3 * 11 * 17 := by rfl
 
-/-- 561 is composite (not a prime number). -/
+/-- 561 is composite (not prime). -/
 lemma not_prime_561 : ¬ (561 : ℕ).Prime := by norm_num
 
 /-- Divisibility lemma for prime factor 3: for any base `b` coprime to 561, `3 ∣ b ^ 560 - 1`. -/
@@ -79,20 +65,38 @@ lemma dvd_561_of_prime_factors {b : ℕ} (h3 : 3 ∣ b ^ 560 - 1) (h11 : 11 ∣ 
 
 namespace Nat
 
-/-- A natural number `n` is a probable prime to base `b` if `n ∣ b ^ (n - 1) - 1`. -/
-def ProbablePrime (b n : ℕ) : Prop :=
-  n ∣ b ^ (n - 1) - 1
-
-/-- A Carmichael number is a composite natural number `n > 1` such that for every base `b`
-coprime to `n`, `n` is a probable prime to base `b` (`n ∣ b ^ (n - 1) - 1`). -/
+/-- A natural number `n` is a Carmichael number if it is composite, greater than 1,
+and passes the Fermat primality test for all bases `b` coprime to `n`. -/
 def Carmichael (n : ℕ) : Prop :=
-  ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime b n
+  ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime n b
 
-/-- Main theorem: 561 is a Carmichael number. -/
+/-- A Carmichael number is composite (not prime). -/
+lemma Carmichael.not_prime {n : ℕ} (h : Carmichael n) : ¬ n.Prime :=
+  h.1
+
+/-- A Carmichael number is strictly greater than 1. -/
+lemma Carmichael.one_lt {n : ℕ} (h : Carmichael n) : 1 < n :=
+  h.2.1
+
+/-- A Carmichael number is a Fermat probable prime to any coprime base. -/
+lemma Carmichael.probablePrime {n : ℕ} (h : Carmichael n) {b : ℕ} (hb : b.Coprime n) :
+    ProbablePrime n b :=
+  h.2.2 b hb
+
+/-- Positive witness: 561 is a Carmichael number. -/
 theorem carmichael_561 : Carmichael 561 :=
   ⟨not_prime_561, by decide, fun b h ↦
     dvd_561_of_prime_factors (dvd_mod_three h) (dvd_mod_eleven h) (dvd_mod_seventeen h)⟩
 
+/-- Negative sanity check: 9 is not a Carmichael number because it fails the Fermat primality test
+for base 2 (`gcd(2, 9) = 1` but `9 ∤ 2^8 - 1`). -/
+theorem not_carmichael_nine : ¬ Carmichael 9 := fun h ↦
+  (by decide : ¬ (9 ∣ 2 ^ (9 - 1) - 1)) (h.probablePrime (by decide : Nat.Coprime 2 9))
+
 end Nat
 
-export Nat (Carmichael ProbablePrime carmichael_561)
+export Nat (Carmichael carmichael_561 not_carmichael_nine)
+
+#print axioms Nat.carmichael_561
+#print axioms Nat.not_carmichael_nine
+#lint

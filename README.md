@@ -1,4 +1,4 @@
-# Formalization of Carmichael Numbers in Lean 4
+# Formalization of Carmichael Numbers in Lean 4 (Mathlib4 Upstream Ready)
 
 [English](README.md) | [简体中文](README_zh.md)
 
@@ -8,7 +8,7 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL_2.0-orange.svg)](LICENSE-MULAN)
 
-A formalization of **Carmichael numbers** (absolute Fermat pseudoprimes) and the machine-checked verification of the first counterexample $561$ in the **Lean 4** interactive theorem prover with **Mathlib4**.
+A formalization of **Carmichael numbers** (absolute Fermat pseudoprimes) and machine-checked verification of the first positive witness $561$ as well as a negative sanity check $9$ in **Lean 4** with **Mathlib4**, structured for direct upstream integration.
 
 ---
 
@@ -19,12 +19,14 @@ $$b^{p-1} \equiv 1 \pmod p$$
 
 Composite numbers that satisfy this congruence for a specific base $b$ are called **Fermat probable primes** or **Fermat pseudoprimes** to base $b$. Composite numbers that satisfy this congruence for **all** bases $b$ coprime to $n$ are known as **Carmichael numbers** (or absolute Fermat pseudoprimes).
 
-In Lean's mathematical library Mathlib4 (`Mathlib.NumberTheory.FermatPsp`), Fermat pseudoprimes are formalized, but Carmichael numbers were left undefined, with the explicit remark in the module documentation:
+In Mathlib4 (`Mathlib.NumberTheory.FermatPsp`), Fermat pseudoprimes are formalized, but Carmichael numbers were left undefined, with the explicit remark in the module documentation:
 > *"Numbers which are Fermat pseudoprimes to all bases are known as Carmichael numbers (not yet defined in this file)."*
 
 This repository directly addresses that gap by:
-1. Providing the canonical mathematical definition `Nat.Carmichael`.
-2. Formally proving that $561 = 3 \times 11 \times 17$ is a Carmichael number (`carmichael_561`), verified with zero axioms beyond the Lean 4 kernel foundations.
+1. Natively importing `Mathlib.NumberTheory.FermatPsp` and utilizing official `Nat.ProbablePrime (n b : ℕ)`.
+2. Providing the canonical mathematical definition `Nat.Carmichael` with dot-notation extractors.
+3. Formally proving that $561 = 3 \times 11 \times 17$ is a Carmichael number (`carmichael_561`), verified with zero axioms beyond the Lean 4 kernel foundations.
+4. Formally proving that $9$ is not a Carmichael number (`not_carmichael_nine`), verifying soundness.
 
 ---
 
@@ -32,15 +34,17 @@ This repository directly addresses that gap by:
 
 The main formalizations are located in [`Carmichael.lean`](Carmichael.lean):
 
-### 1. Definitions
-- **`Nat.ProbablePrime (b n : ℕ) : Prop`**  
-  A natural number $n$ passes the Fermat primality test to base $b$ if $n \mid b^{n-1} - 1$.
+### 1. Definition & Dot-Notation Extractors
 - **`Nat.Carmichael (n : ℕ) : Prop`**  
-  A composite number $n > 1$ such that for all $b$ coprime to $n$, $n$ is a probable prime to base $b$:
+  A composite number $n > 1$ such that for all $b$ coprime to $n$, $n$ is a Fermat probable prime to base $b$:
   ```lean
   def Carmichael (n : ℕ) : Prop :=
-    ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime b n
+    ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime n b
   ```
+- **Dot-Notation Extractors:**
+  - `lemma Carmichael.not_prime {n : ℕ} (h : Carmichael n) : ¬ n.Prime`
+  - `lemma Carmichael.one_lt {n : ℕ} (h : Carmichael n) : 1 < n`
+  - `lemma Carmichael.probablePrime {n : ℕ} (h : Carmichael n) {b : ℕ} (hb : b.Coprime n) : ProbablePrime n b`
 
 ### 2. Supporting Lemmas
 - `factor_561 : 561 = 3 * 11 * 17` — Prime factorization of 561.
@@ -50,9 +54,17 @@ The main formalizations are located in [`Carmichael.lean`](Carmichael.lean):
 - `dvd_mod_seventeen {b : ℕ} (h : b.Coprime 561) : 17 ∣ b ^ 560 - 1` — Prime factor divisibility for 17.
 - `dvd_561_of_prime_factors` — Divisibility combination for pairwise coprime factors $3 \times 11 \times 17 = 561$.
 
-### 3. Main Theorem
-- **`theorem carmichael_561 : Carmichael 561`** (also accessible as `Nat.carmichael_561`):  
+### 3. Main Theorems
+- **Positive Witness**:
+  ```lean
+  theorem carmichael_561 : Carmichael 561
+  ```
   Formally establishes that 561 is a Carmichael number.
+- **Negative Sanity Check**:
+  ```lean
+  theorem not_carmichael_nine : ¬ Carmichael 9
+  ```
+  Formally establishes that 9 fails the Fermat test for base $b = 2$ ($\gcd(2, 9) = 1$ but $9 \nmid 2^8 - 1$).
 
 ---
 
@@ -67,40 +79,32 @@ The main formalizations are located in [`Carmichael.lean`](Carmichael.lean):
 lake build
 ```
 
-### 2. Strict Typecheck (Zero Warnings)
+### 2. Strict Typecheck & Lint (Zero Warnings)
 ```bash
 lake env lean -D warningAsError=true Carmichael.lean
 ```
 
 ### 3. Verify Soundness & Axioms (No Sorry / No Cheating Axioms)
-To inspect the axioms used by `carmichael_561` and verify there are no hidden assumptions or `sorryAx`:
-
-**Linux / macOS (Bash):**
-```bash
-printf "import Carmichael\n#print axioms carmichael_561\n" | lake env lean --stdin
-```
+To inspect the axioms used by `carmichael_561` and `not_carmichael_nine`:
 
 **Windows (PowerShell):**
 ```powershell
-@('import Carmichael', '#print axioms carmichael_561') | lake env lean --stdin
+lake env lean -D warningAsError=true Carmichael.lean
 ```
 
 **Expected Output:**
 ```text
 'Nat.carmichael_561' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Nat.not_carmichael_nine' depends on axioms: [propext]
+-- Found 0 errors in 12 declarations (plus 0 automatically generated ones) in the current file with 14 linters
+-- All linting checks passed!
 ```
-This confirms that the theorem is completely proved and relies solely on the standard Lean 4 kernel foundational axioms (`propext`, `Classical.choice`, `Quot.sound`).
 
 ---
 
-## Continuous Integration (CI)
+## Mathlib4 Upstream Pull Request
 
-The repository includes a GitHub Actions continuous integration pipeline in [`.github/workflows/lean_build.yml`](.github/workflows/lean_build.yml) that automatically checks every push and pull request on Ubuntu:
-1. Installs the exact toolchain via `elan`.
-2. Fetches Mathlib pre-built cache via `lake exe cache get`.
-3. Executes `lake build`.
-4. Validates `Carmichael.lean` under `-D warningAsError=true`.
-5. Inspects kernel axioms to ensure zero `sorryAx`.
+See [PR_DESCRIPTION.md](PR_DESCRIPTION.md) for the upstream Pull Request draft conforming to Mathlib4 review standards.
 
 ---
 
