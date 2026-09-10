@@ -96,7 +96,3 @@ theorem not_carmichael_nine : ¬ Carmichael 9 := fun h ↦
 end Nat
 
 export Nat (Carmichael carmichael_561 not_carmichael_nine)
-
-#print axioms Nat.carmichael_561
-#print axioms Nat.not_carmichael_nine
-#lint
