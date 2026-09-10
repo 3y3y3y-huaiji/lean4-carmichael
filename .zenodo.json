@@ -1,0 +1,22 @@
+{
+  "title": "Formalization of Carmichael Numbers and 561 in Lean 4",
+  "description": "Formal mathematical definition of Carmichael numbers (absolute Fermat pseudoprimes) and computer-verified proof of the first counterexample 561 using Lean 4 and Mathlib4.",
+  "creators": [
+    {
+      "name": "Su, MingKai",
+      "affiliation": "Independent Researcher"
+    }
+  ],
+  "keywords": [
+    "Lean 4",
+    "Mathlib4",
+    "Number Theory",
+    "Carmichael Numbers",
+    "Fermat Pseudoprimes",
+    "Formal Verification",
+    "Interactive Theorem Proving"
+  ],
+  "license": "Apache-2.0",
+  "upload_type": "software",
+  "access_right": "open"
+}

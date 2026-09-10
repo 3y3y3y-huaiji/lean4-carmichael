@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this formalization or software in academic work, please cite it as below."
+authors:
+  - family-names: "Su"
+    given-names: "MingKai"
+    name: "Su MingKai (SU MINGKAI)"
+title: "Formalization of Carmichael Numbers and 561 in Lean 4"
+version: 1.0.0
+date-released: 2026-09-10
+url: "https://github.com/3y3y3y-huaiji/lean4-carmichael"
+repository-code: "https://github.com/3y3y3y-huaiji/lean4-carmichael"
+keywords:
+  - "Lean 4"
+  - "Mathlib4"
+  - "Number Theory"
+  - "Carmichael Numbers"
+  - "Formal Verification"
+license: "Apache-2.0"

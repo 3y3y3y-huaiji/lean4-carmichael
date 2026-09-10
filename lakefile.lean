@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL
 
-package «ai_for_math» where
+package «carmichael» where
   -- 项目基础配置
 
 require mathlib from git
