@@ -86,6 +86,19 @@ Located in [`Carmichael/Korselt.lean`](Carmichael/Korselt.lean), bridging `Nat.C
       Nat.Carmichael n ↔ Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
   ```
 
+### 5. First Carmichael Number Minimality (No Carmichael Numbers < 561)
+Located in [`Carmichael/Smallest.lean`](Carmichael/Smallest.lean), resolving the open Mathlib upstream TODO:
+- **No Carmichael Numbers Below 561**:
+  ```lean
+  theorem not_isCarmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ n.IsCarmichael
+  theorem not_carmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ Nat.Carmichael n
+  ```
+- **561 is the Minimal Carmichael Number**:
+  ```lean
+  theorem isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n
+  theorem carmichael_min {n : ℕ} (hn : Nat.Carmichael n) : 561 ≤ n
+  ```
+
 ---
 
 ## Build & Verify Instructions

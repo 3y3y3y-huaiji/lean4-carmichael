@@ -88,6 +88,19 @@ $$b^{p-1} \equiv 1 \pmod p$$
       Nat.Carmichael n ↔ Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
   ```
 
+### 5. 最小卡迈克尔数极小性定理（561 是最小卡迈克尔数，小于 561 无卡迈克尔数）
+位于 [`Carmichael/Smallest.lean`](Carmichael/Smallest.lean)，直接攻克并闭环了 Mathlib 官方 Carmichael 模块中悬挂的 TODO：
+- **小于 561 无卡迈克尔数**：
+  ```lean
+  theorem not_isCarmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ n.IsCarmichael
+  theorem not_carmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ Nat.Carmichael n
+  ```
+- **561 是严格最小的卡迈克尔数**：
+  ```lean
+  theorem isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n
+  theorem carmichael_min {n : ℕ} (hn : Nat.Carmichael n) : 561 ≤ n
+  ```
+
 ---
 
 ## 本地构建与复现指南
