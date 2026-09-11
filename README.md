@@ -8,6 +8,7 @@
 [![Mathlib4](https://img.shields.io/badge/Mathlib4-v4.33.1-brightgreen.svg)](https://github.com/leanprover-community/mathlib4)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL_2.0-orange.svg)](LICENSE-MULAN)
+[![LLM Assisted](https://img.shields.io/badge/Formalized_with-LLM_Assistance-blueviolet.svg)](#ai--llm-assistance-disclosure)
 
 Formal verification in **Lean 4** and **Mathlib4** establishing the core foundation of pseudoprimes, computational reflection, and deterministic Miller-Rabin primality testing:
 
@@ -101,6 +102,13 @@ lake env lean Carmichael/StrongPspMulti.lean
 ```
 
 ---
+
+
+## AI / LLM Assistance Disclosure
+
+In compliance with the **Mathlib Community & LLM Contribution Guidelines**:
+- This formalization project was developed and explored with the assistance of Large Language Models (LLMs).
+- All formal definitions, theorems, lemmas, and proofs have been strictly compiled and machine-checked by **Lean 4 (v4.33.1)** and the Lean 4 kernel with **0 sorry** and **0 custom axioms**.
 
 ## License
 

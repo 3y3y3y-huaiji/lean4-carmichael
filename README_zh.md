@@ -8,6 +8,7 @@
 [![Mathlib4](https://img.shields.io/badge/Mathlib4-v4.33.1-brightgreen.svg)](https://github.com/leanprover-community/mathlib4)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL_2.0-orange.svg)](LICENSE-MULAN)
+[![LLM 辅助形式化](https://img.shields.io/badge/形式化辅助-LLM_Assisted-blueviolet.svg)](#ai--大语言模型llm辅助声明)
 
 本项目基于交互式定理证明器 **Lean 4** 与官方数学库 **Mathlib4**，构建了一套完整的数论伪素数体系、计算反射架构及确定性米勒-拉宾（Miller-Rabin）素数检验形式化基石：
 
@@ -92,6 +93,13 @@ lake env lean Carmichael/StrongPspMulti.lean
 ```
 
 ---
+
+
+## AI / 大语言模型（LLM）辅助声明
+
+严格遵循 **Mathlib 社区开源规范与 AI / LLM 使用准则**：
+- 本项目的形式化证明、策略探索与代码重构在大型语言模型（LLM）的辅助下完成。
+- 项目中包含的所有数学定义、引理与核心定理，均由 **Lean 4 (v4.33.1)** 内核执行了严格的机器类型检查与形式化验证，达成 **0 sorry** 与 **0 非标准公理** 的完全机器背书。
 
 ## 开源许可证
 
