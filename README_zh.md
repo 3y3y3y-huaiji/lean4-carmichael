@@ -82,6 +82,7 @@ theorem carmichael_iff_korselt (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
 ├── Carmichael/
 │   ├── Korselt.lean          # 科瑟尔特准则（基于群指数与 ArithmeticFunction.carmichael）
 │   └── Smallest.lean         # 攻克 Mathlib 官方 TODO：证明小于 561 无卡迈克尔数
+├── benchmark/                # 严格强制求值性能基准实测（561反射耗时仅 ~226 微秒，筛法支持至 10 万）
 ├── PR_DESCRIPTION.md         # 针对 Mathlib4 的贡献说明草稿
 ├── lakefile.toml             # Lake 配置文件
 └── lean-toolchain            # Lean 4 工具链版本 (v4.33.1)
@@ -96,9 +97,13 @@ theorem carmichael_iff_korselt (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
 lake build
 ```
 
-### 2. 测量 561 极小性验证耗时（实测约 17 秒）
+### 2. 运行严格强制求值性能实测（561 判定仅约 0.22 毫秒）
+```bash
+lake env lean --run benchmark/StrictBench.lean
+```
+或直接运行 PowerShell 测试脚本：
 ```powershell
-Measure-Command { lake env lean Carmichael/Smallest.lean }
+pwsh ./benchmark/run_benchmark_zh.ps1
 ```
 
 ### 3. 检查内核公理（零非标准公理、零 sorry）

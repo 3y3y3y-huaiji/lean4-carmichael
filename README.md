@@ -81,6 +81,7 @@ Located in [`Carmichael.lean`](Carmichael.lean):
 ├── Carmichael/
 │   ├── Korselt.lean          # Korselt's Criterion (1899) via group exponent & ArithmeticFunction.carmichael
 │   └── Smallest.lean         # Proof that no Carmichael number < 561 exists (resolving Mathlib TODO)
+├── benchmark/                # Strict evaluation benchmarks (561 reflection: ~226 µs, Sieve up to 100k)
 ├── PR_DESCRIPTION.md         # Upstream Mathlib contribution description
 ├── lakefile.toml             # Lake configuration
 └── lean-toolchain            # Lean 4 toolchain (v4.33.1)
@@ -95,9 +96,13 @@ Located in [`Carmichael.lean`](Carmichael.lean):
 lake build
 ```
 
-### 2. Measure compile time of 561 minimality proof (~17s)
+### 2. Run Strict Evaluation Benchmark (< 0.3 ms for 561)
+```bash
+lake env lean --run benchmark/StrictBench.lean
+```
+Or run the PowerShell script:
 ```powershell
-Measure-Command { lake env lean Carmichael/Smallest.lean }
+pwsh ./benchmark/run_benchmark.ps1
 ```
 
 ### 3. Check axioms (0 non-standard axioms)
