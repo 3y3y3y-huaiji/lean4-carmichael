@@ -4,9 +4,17 @@ Copyright (c) 2026 Su MingKai (SU MINGKAI). All rights reserved.
 
 This project is dual-licensed under either of the following licenses, at your option:
 
-- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
-- **Mulan Permissive Software License, Version 2** ([LICENSE-MULAN](LICENSE-MULAN) or <http://license.coscl.org.cn/MulanPSL2>)
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- **Mulan Permissive Software License, Version 2 (木兰宽松许可证, 第2版, MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN) or <http://license.coscl.org.cn/MulanPSL2>)
+
+---
+
+本项目采用双开源许可证（Dual License）模式发布，用户可在以下两项许可协议中自由选择：
+
+- **Apache License 2.0 许可证**（参见 [LICENSE-APACHE](LICENSE-APACHE)）
+- **木兰宽松许可证 第2版 (Mulan Permissive Software License, Version 2 / MulanPSL-2.0)**（参见 [LICENSE-MULAN](LICENSE-MULAN)）
 
 ## Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in this work by you shall be dual-licensed as above, without any additional terms or conditions.
+

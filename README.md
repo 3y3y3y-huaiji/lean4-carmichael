@@ -111,5 +111,6 @@ All declarations depend strictly on standard Lean 4 foundational axioms: `[prope
 ## License
 
 Dual-licensed under:
-- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
-- **Mulan Permissive Software License, Version 2** ([LICENSE-MULAN](LICENSE-MULAN))
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
+- **Mulan Permissive Software License, Version 2 (木兰宽松许可证, 第2版, MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN) or <http://license.coscl.org.cn/MulanPSL2>)
+

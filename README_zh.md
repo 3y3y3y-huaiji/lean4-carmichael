@@ -112,5 +112,6 @@ lake env lean -D warningAsError=true Carmichael/Smallest.lean
 ## 开源许可证 (License)
 
 本项目采用**双许可证（Dual License）**模式发布：
-- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
-- **木兰宽松许可证 第2版（MulanPSL-2.0）** ([LICENSE-MULAN](LICENSE-MULAN))
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) 或 <https://www.apache.org/licenses/LICENSE-2.0>)
+- **木兰宽松许可证 第2版 (Mulan Permissive Software License, Version 2 / MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN) 或 <http://license.coscl.org.cn/MulanPSL2>)
+
