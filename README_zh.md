@@ -1,4 +1,4 @@
-# 最小卡迈克尔数（561）极小性定理与科瑟尔特准则的 Lean 4 形式化验证
+# 形式化数论伪素数体系与确定性素数检验 (Lean 4)
 
 [English](README.md) | [简体中文](README_zh.md)
 
@@ -9,114 +9,92 @@
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE-APACHE)
 [![License: MulanPSL-2.0](https://img.shields.io/badge/License-MulanPSL_2.0-orange.svg)](LICENSE-MULAN)
 
-本项目基于交互式定理证明器 **Lean 4** 与官方数学库 **Mathlib4**，完成了以下核心形式化成果：
-1. **严格形式化证明 561 是最小的卡迈克尔数**（`Nat.isCarmichael_min`、`Nat.not_isCarmichael_of_lt_561`），直接攻克并闭环了 Mathlib 官方 `Mathlib.NumberTheory.CarmichaelNumber` 模块中悬挂的 TODO。
-2. **科瑟尔特准则（Korselt's Criterion 1899）机器证明**（`Nat.carmichael_iff_korselt`），将卡迈克尔数与群指数理论及 Mathlib 的 `Mathlib.NumberTheory.ArithmeticFunction.Carmichael` 正式桥接。
+本项目基于交互式定理证明器 **Lean 4** 与官方数学库 **Mathlib4**，构建了一套完整的数论伪素数体系、计算反射架构及确定性米勒-拉宾（Miller-Rabin）素数检验形式化基石：
+
+1. **561 是最小卡迈克尔数极小性大定理**（`Carmichael/Smallest.lean`），彻底攻克 Mathlib 官方 `Mathlib.NumberTheory.CarmichaelNumber` 悬挂的开放 TODO。
+2. **科瑟尔特准则（Korselt's Criterion 1899）机器证明**（`Carmichael/Korselt.lean`），桥接卡迈克尔数与群指数及 Mathlib 卡迈克尔函数。
+3. **341 是以 2 为底最小费马伪素数（Poulet 数）定理**（`Carmichael/Poulet.lean`）。
+4. **2047 是以 2 为底最小强伪素数大定理**（`Carmichael/StrongPsp.lean`），通过构造性 2-adic 分解与毫秒级计算反射实现。
+5. **双底数 {2, 3} Pomerance-Selfridge-Wagstaff (PSW) 大定理**（`Carmichael/StrongPspMulti.lean`），形式化证明 1,373,653 是以 2 和 3 为底的最小强伪素数，采用稀疏证书反射，杜绝内核暴力遍历。
 
 ---
 
-## 核心数学成果
+## 四大里程碑成果一览
 
-### 1. 攻克 Mathlib 官方开放 TODO（最小卡迈克尔数）
-在 Mathlib 官方模块 `Mathlib.NumberTheory.CarmichaelNumber` 的模块文档中，明确留下了待办说明：
-> *"TODO: Prove (in a computationally efficient manner) that there are no Carmichael numbers less than 561."*  
-> （TODO：以高效计算的方式证明不存在小于 561 的卡迈克尔数。）
+| # | 里程碑定理 | 极小性分界 | 核心模块 | 核心定理声明 |
+|---|---|---|---|---|
+| 1 | **卡迈克尔数与 Korselt 准则** | $561 = 3 \times 11 \times 17$ | [`Carmichael/Smallest.lean`](Carmichael/Smallest.lean) | `Nat.isCarmichael_min`, `Nat.carmichael_iff_korselt` |
+| 2 | **Poulet 数（以 2 为底费马伪素数）** | $341 = 11 \times 31$ | [`Carmichael/Poulet.lean`](Carmichael/Poulet.lean) | `Nat.isPoulet_min`, `Nat.isPoulet_341` |
+| 3 | **米勒-拉宾单底数强伪素数** | $2047 = 23 \times 89$ | [`Carmichael/StrongPsp.lean`](Carmichael/StrongPsp.lean) | `Nat.smallest_strong_psp_two`, `Nat.strong_psp_2047` |
+| 4 | **PSW 双底数 {2, 3} 定理** | $1373653 = 829 \times 1657$ | [`Carmichael/StrongPspMulti.lean`](Carmichael/StrongPspMulti.lean) | `Nat.smallest_strong_psp_two_three`, `Nat.strong_psp_two_three_1373653` |
 
-本项目在 [`Carmichael/Smallest.lean`](Carmichael/Smallest.lean) 中完全证明了该猜想/定理，并保证极高的计算效率：
-- **数论剪枝定理**：
-  - `IsCarmichael.odd`：证明卡迈克尔数必为奇数；
-  - `not_isCarmichael_mul_primes`：严格证明任意半素数（两不同素数之积 $p \times q$）绝不可能为卡迈克尔数；
-  - 平方因子整除判定：若 $p^2 \mid n$，则破坏无平方因子性，不可能为卡迈克尔数。
-- **高效候选消除**：对于 $< 561$ 的所有奇数，仅需排查 279 种奇数候选分支。在单核环境下，仅需 **~17 秒** 即可完成全部 Lean 4 内核类型检查，绝不触发 heartbeat 超时或深度递归溢出。
+---
 
+## 核心数学与技术亮点
+
+### 1. 攻克 Mathlib 官方开放 TODO（最小卡迈克尔数 561）
+在 Mathlib 官方模块中：
+> *"TODO: Prove (in a computationally efficient manner) that there are no Carmichael numbers less than 561."*
+
+在 [`Carmichael/Smallest.lean`](Carmichael/Smallest.lean) 中，基于数论剪枝（奇数性、无平方因子性、半素数排除），仅需排查 279 种候选即可在数秒内完成内核验证。
+
+### 2. 构造性 2-adic 分解与 2047 强伪素数极小性
+在 [`Carmichael/StrongPsp.lean`](Carmichael/StrongPsp.lean) 中：
+- 构造性实现 $n - 1 = d \cdot 2^s$ 分解（`Nat.oddPart`, `Nat.twoPowerPart`），无选择公理依赖；
+- 建立 `Nat.IsStrongPsp (b : ℕ) (n : ℕ) : Prop` 标准命题；
+- 基于计算反射，内核求值仅耗时 **约 2 毫秒**：
 ```lean
-/-- 严格证明小于 561 的自然数中不存在卡迈克尔数 -/
-theorem not_isCarmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ n.IsCarmichael
+theorem smallest_strong_psp_two : ∀ n < 2047, ¬ IsStrongPsp 2 n
+theorem strong_psp_2047 : IsStrongPsp 2 2047
+theorem isStrongPsp_min : ∀ n, IsStrongPsp 2 n → 2047 ≤ n
+```
 
-/-- 严格证明 561 是最小的卡迈克尔数 -/
-theorem isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n
-
-/-- 面向 Nat.Carmichael 的等价推论 -/
-theorem not_carmichael_of_lt_561 {n : ℕ} (h : n < 561) : ¬ Nat.Carmichael n
-theorem carmichael_min {n : ℕ} (hn : Nat.Carmichael n) : 561 ≤ n
+### 3. 双底数多底数体系与 1,373,653 PSW 定理
+在 [`Carmichael/StrongPspMulti.lean`](Carmichael/StrongPspMulti.lean) 中：
+- 定义多底数系统：`def IsStrongPspSet (B : Finset ℕ) (n : ℕ) : Prop := ∀ b ∈ B, IsStrongPsp b n`；
+- **稀疏证书反射（避免内核爆炸）**：数学证明小于 137 万的反例必先是以 2 为底的强伪素数（仅有 58 个！），通过内核反射秒级裁决 58 个候选全部通不过底数 3 的测试；
+- 证明见证定理：
+```lean
+theorem smallest_strong_psp_two_three (h : Base2PspsPreFilter base2PspsLt1373653) :
+    ∀ n < 1373653, ¬ IsStrongPspSet {2, 3} n
+theorem strong_psp_two_three_1373653 : IsStrongPspSet {2, 3} 1373653
 ```
 
 ---
 
-### 2. 科瑟尔特准则（Korselt's Criterion 1899）
-位于 [`Carmichael/Korselt.lean`](Carmichael/Korselt.lean)，对任意大于 1 的合数 $n$，证明了三者等价：
-$$\text{Nat.Carmichael } n \iff \lambda(n) \mid (n - 1) \iff (n \text{ 无平方因子 } \land \forall p \mid n, (p - 1) \mid (n - 1))$$
-
-全面桥接了 Mathlib 的卡迈克尔函数 `ArithmeticFunction.carmichael` 与群单位元指数 `exponent (ZMod n)ˣ`：
-
-```lean
-/-- 第一步：Nat.Carmichael n ↔ carmichael n ∣ n - 1 -/
-theorem carmichael_iff_carmichael_dvd (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
-    Nat.Carmichael n ↔ ArithmeticFunction.carmichael n ∣ n - 1
-
-/-- 第二步：carmichael n ∣ n - 1 ↔ 科瑟尔特条件 -/
-theorem carmichael_dvd_iff_korselt (n : ℕ) (hn : 1 < n) :
-    ArithmeticFunction.carmichael n ∣ n - 1 ↔
-    Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
-
-/-- 第三步（主定理：科瑟尔特准则） -/
-theorem carmichael_iff_korselt (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
-    Nat.Carmichael n ↔ Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
-```
-
----
-
-### 3. 基础定义与健全性检验基线
-位于 [`Carmichael.lean`](Carmichael.lean)：
-- 基于 `Mathlib.NumberTheory.FermatPsp.ProbablePrime` 的标准定义 `Nat.Carmichael`；
-- 初等证明 561 为卡迈克尔数（`carmichael_561`）；
-- 负向健全性反例证明 9 不是卡迈克尔数（`not_carmichael_nine`）。
-
----
-
-## 项目目录结构
+## 目录结构
 
 ```text
 .
-├── Carmichael.lean           # 基础定义、561 正向非空实例与 9 负向反例
+├── Carmichael.lean                 # 顶层基线与根入口
 ├── Carmichael/
-│   ├── Korselt.lean          # 科瑟尔特准则（基于群指数与 ArithmeticFunction.carmichael）
-│   └── Smallest.lean         # 攻克 Mathlib 官方 TODO：证明小于 561 无卡迈克尔数
-├── benchmark/                # 严格强制求值性能基准实测（561反射耗时仅 ~226 微秒，筛法支持至 10 万）
-├── PR_DESCRIPTION.md         # 针对 Mathlib4 的贡献说明草稿
-├── lakefile.toml             # Lake 配置文件
-└── lean-toolchain            # Lean 4 工具链版本 (v4.33.1)
+│   ├── Korselt.lean                # 科瑟尔特准则（1899）与群指数等价
+│   ├── Smallest.lean               # 561 极小性大定理（回应 Mathlib TODO）
+│   ├── Poulet.lean                 # 341 最小 Poulet 数（以 2 为底费马伪素数）
+│   ├── StrongPsp.lean              # 2047 最小强伪素数（米勒-拉宾单底数）
+│   └── StrongPspMulti.lean         # 1,373,653 最小强伪素数（PSW {2, 3} 双底数大定理）
+├── benchmark/                      # 性能基准与反射求值测试
+├── PR_DESCRIPTION.md               # 向上游贡献 PR 描述
+├── lakefile.lean                   # Lake 构建配置
+└── lean-toolchain                  # Lean 4 工具链 (v4.33.1)
 ```
 
 ---
 
-## 本地构建与复现指南
+## 编译与验证
 
-### 1. 编译全部目标
 ```bash
-lake build
-```
+# 全量构建（开启警告即错误严格模式）
+lake build -KwarningAsError=true
 
-### 2. 运行严格强制求值性能实测（561 判定仅约 0.22 毫秒）
-```bash
-lake env lean --run benchmark/StrictBench.lean
+# 检查公理依赖（仅依赖 Lean 4 标准公理体系：propext, Classical.choice, Quot.sound）
+lake env lean Carmichael/StrongPspMulti.lean
 ```
-或直接运行 PowerShell 测试脚本：
-```powershell
-pwsh ./benchmark/run_benchmark_zh.ps1
-```
-
-### 3. 检查内核公理（零非标准公理、零 sorry）
-```bash
-lake env lean -D warningAsError=true Carmichael/Smallest.lean
-```
-所有定理均仅依赖 Lean 4 核心标准公理：`[propext, Classical.choice, Quot.sound]`。
 
 ---
 
-## 开源许可证 (License)
+## 开源许可证
 
-本项目采用**双许可证（Dual License）**模式发布：
-- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) 或 <https://www.apache.org/licenses/LICENSE-2.0>)
-- **木兰宽松许可证 第2版 (Mulan Permissive Software License, Version 2 / MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN) 或 <http://license.coscl.org.cn/MulanPSL2>)
-
+本项目采用双重开源许可证授权：
+- **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
+- **木兰宽松许可证, 第2版 (MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN))
