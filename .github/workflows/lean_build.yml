@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install elan
         run: |
@@ -32,17 +32,16 @@ jobs:
 
       - name: Lake Build
         run: |
-          lake build
-          lake build Carmichael.Korselt
+          lake build -KwarningAsError=true
 
-      - name: Strict Verification of Carmichael.lean
-        run: lake env lean -D warningAsError=true Carmichael.lean
-
-      - name: Strict Verification of Carmichael/Korselt.lean
-        run: lake env lean -D warningAsError=true Carmichael/Korselt.lean
-
-      - name: Strict Verification of Carmichael/Smallest.lean
-        run: lake env lean -D warningAsError=true Carmichael/Smallest.lean
+      - name: Strict Verification of All Modules
+        run: |
+          lake env lean -D warningAsError=true Carmichael.lean
+          lake env lean -D warningAsError=true Carmichael/Korselt.lean
+          lake env lean -D warningAsError=true Carmichael/Smallest.lean
+          lake env lean -D warningAsError=true Carmichael/Poulet.lean
+          lake env lean -D warningAsError=true Carmichael/StrongPsp.lean
+          lake env lean -D warningAsError=true Carmichael/StrongPspMulti.lean
 
       - name: Kernel Axioms Verification
         run: |
@@ -50,10 +49,18 @@ jobs:
           import Carmichael
           import Carmichael.Korselt
           import Carmichael.Smallest
+          import Carmichael.Poulet
+          import Carmichael.StrongPsp
+          import Carmichael.StrongPspMulti
+
           #print axioms Nat.carmichael_561
           #print axioms Nat.carmichael_iff_korselt
           #print axioms Nat.not_isCarmichael_of_lt_561
           #print axioms Nat.isCarmichael_min
+          #print axioms Nat.smallest_strong_psp_two
+          #print axioms Nat.strong_psp_2047
+          #print axioms Nat.smallest_strong_psp_two_three
+          #print axioms Nat.strong_psp_two_three_1373653
           EOF
           OUTPUT=$(lake env lean check_axioms.lean)
           echo "Axioms check output:"
@@ -62,19 +69,20 @@ jobs:
             echo "Error: Proof depends on sorryAx"
             exit 1
           fi
-          if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_561' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Unexpected axioms for carmichael_561: $OUTPUT"
+          if ! echo "$OUTPUT" | grep -Fq "'Nat.smallest_strong_psp_two' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
+            echo "Error: Unexpected axioms for smallest_strong_psp_two: $OUTPUT"
             exit 1
           fi
-          if ! echo "$OUTPUT" | grep -Fq "'Nat.carmichael_iff_korselt' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Unexpected axioms for carmichael_iff_korselt: $OUTPUT"
+          if ! echo "$OUTPUT" | grep -Fq "'Nat.strong_psp_2047' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
+            echo "Error: Unexpected axioms for strong_psp_2047: $OUTPUT"
             exit 1
           fi
-          if ! echo "$OUTPUT" | grep -Fq "'Nat.not_isCarmichael_of_lt_561' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Unexpected axioms for not_isCarmichael_of_lt_561: $OUTPUT"
+          if ! echo "$OUTPUT" | grep -Fq "'Nat.smallest_strong_psp_two_three' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
+            echo "Error: Unexpected axioms for smallest_strong_psp_two_three: $OUTPUT"
             exit 1
           fi
-          if ! echo "$OUTPUT" | grep -Fq "'Nat.isCarmichael_min' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
-            echo "Error: Unexpected axioms for isCarmichael_min: $OUTPUT"
+          if ! echo "$OUTPUT" | grep -Fq "'Nat.strong_psp_two_three_1373653' depends on axioms: [propext, Classical.choice, Quot.sound]"; then
+            echo "Error: Unexpected axioms for strong_psp_two_three_1373653: $OUTPUT"
             exit 1
           fi
+          echo "All kernel axioms verified successfully!"
