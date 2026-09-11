@@ -43,6 +43,21 @@ jobs:
           lake env lean -D warningAsError=true Carmichael/StrongPsp.lean
           lake env lean -D warningAsError=true Carmichael/StrongPspMulti.lean
 
+      - name: Mathlib Linter Check (#lint)
+        run: |
+          cat << 'EOF' > run_linter.lean
+          import Carmichael
+          import Carmichael.Korselt
+          import Carmichael.Smallest
+          import Carmichael.Poulet
+          import Carmichael.StrongPsp
+          import Carmichael.StrongPspMulti
+
+          #lint
+          EOF
+          lake env lean run_linter.lean
+          rm run_linter.lean
+
       - name: Kernel Axioms Verification
         run: |
           cat << 'EOF' > check_axioms.lean

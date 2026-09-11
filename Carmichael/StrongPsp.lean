@@ -13,10 +13,10 @@ This module formally establishes that 2047 is the strictly smallest strong pseud
 
 ## Mathematical Overview
 
-A natural number 
- is a strong pseudoprime to base  if it is an odd composite number 
+A natural number
+ is a strong pseudoprime to base  if it is an odd composite number
  ≥ 3
-that passes the Miller-Rabin primality test to base : writing 
+that passes the Miller-Rabin primality test to base : writing
  - 1 = d * 2^s with d odd,
 either:
 - ^d ≡ 1 [MOD n], or
@@ -61,11 +61,11 @@ def splitTwoAux : ℕ → ℕ → ℕ × ℕ
 /-- Computable decomposition of m into (d, s) such that m = d * 2^s. -/
 def splitTwo (m : ℕ) : ℕ × ℕ := splitTwoAux m m
 
-/-- The odd factor d in the 2-adic decomposition 
+/-- The odd factor d in the 2-adic decomposition
  - 1 = d * 2^s. -/
 def oddPart (n : ℕ) : ℕ := (splitTwo (n - 1)).1
 
-/-- The exponent s of 2 in the 2-adic decomposition 
+/-- The exponent s of 2 in the 2-adic decomposition
  - 1 = d * 2^s. -/
 def twoPowerPart (n : ℕ) : ℕ := (splitTwo (n - 1)).2
 
@@ -108,7 +108,7 @@ lemma splitTwoAux_odd : ∀ (fuel m : ℕ), m ≤ fuel → m ≠ 0 →
     exact splitTwoAux_odd fuel (m / 2) hdiv_le hdiv_ne
   · exact heven
 
-/-- For any 
+/-- For any
  ≥ 2, oddPart n is odd. -/
 theorem odd_oddPart {n : ℕ} (hn : 2 ≤ n) : Odd (oddPart n) := by
   have hm : n - 1 ≠ 0 := by omega
@@ -234,11 +234,11 @@ theorem isPrimeDec2047_iff {n : ℕ} (hn : n < 2047) :
       · left
         omega
 
-/-- Computable decider certifying that 
+/-- Computable decider certifying that
  is NOT a strong pseudoprime to base 2.
-Returns 	rue if 
- < 3, 
- is even, or 
+Returns 	rue if
+ < 3,
+ is even, or
  is detected prime.
 For odd composite candidates below 2047, verifies that the Miller-Rabin test base 2 fails. -/
 def isNotStrongPspDec2 (n : ℕ) : Bool :=
@@ -276,7 +276,7 @@ theorem isNotStrongPspDec2_sound {n : ℕ} (h : isNotStrongPspDec2 n = true) :
       have hmod_eq : 2 ^ (oddPart n * 2 ^ r) % n = (n - 1) % n := hr_eq
       exact hspec hmod_eq
 
-/-- Bounded verification checker: returns true if all 
+/-- Bounded verification checker: returns true if all
  < N are certified not strong pseudoprimes
 to base 2. -/
 def checkStrongPspBound2 (N : ℕ) : Bool :=

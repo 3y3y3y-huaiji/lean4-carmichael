@@ -15,9 +15,9 @@ This module formally establishes the Pomerance-Selfridge-Wagstaff (PSW) theorem 
 
 ## Mathematical Overview
 
-A natural number 
+A natural number
  is a strong pseudoprime to a finite set of bases B (Nat.IsStrongPspSet B n)
-if it is an odd composite number 
+if it is an odd composite number
  ≥ 3 that passes the Miller-Rabin primality test for every
 base  ∈ B.
 
@@ -38,7 +38,7 @@ Hence, 1,373,653 is the first strong pseudoprime to bases {2, 3}.
 ## Main Definitions and Theorems
 
 - Nat.IsStrongPspSet: Definition of multi-base strong pseudoprime for a Finset ℕ.
-- Nat.mrConditionFails: Computable decider certifying that 
+- Nat.mrConditionFails: Computable decider certifying that
  fails Miller-Rabin for base .
 - Nat.not_isStrongPsp_of_mrConditionFails: Soundness of Miller-Rabin failure check.
 - Nat.base2PspsLt1373653: The 58 base-2 strong pseudoprimes below 1,373,653.
@@ -53,15 +53,15 @@ set_option maxRecDepth 500000
 
 namespace Nat
 
-/-- A natural number 
+/-- A natural number
  is a strong pseudoprime to a finite set of bases B
 if it is a strong pseudoprime to every base  ∈ B. -/
 def IsStrongPspSet (B : Finset ℕ) (n : ℕ) : Prop :=
   ∀ b ∈ B, IsStrongPsp b n
 
-/-- Extracting a single base test from a set: if 
+/-- Extracting a single base test from a set: if
  is a strong pseudoprime to B and  ∈ B,
-then 
+then
  is a strong pseudoprime to . -/
 lemma isStrongPsp_of_mem_set {B : Finset ℕ} {n b : ℕ} (hb : b ∈ B) (h : IsStrongPspSet B n) :
     IsStrongPsp b n :=
@@ -103,7 +103,7 @@ lemma isStrongPsp_two_of_two_three {n : ℕ} (h : IsStrongPspSet {2, 3} n) : IsS
 lemma isStrongPsp_three_of_two_three {n : ℕ} (h : IsStrongPspSet {2, 3} n) : IsStrongPsp 3 n :=
   (isStrongPspSet_two_three.mp h).2
 
-/-- Computable check verifying that candidate 
+/-- Computable check verifying that candidate
  fails the Miller-Rabin condition for base . -/
 def mrConditionFails (b : ℕ) (n : ℕ) : Bool :=
   let d := oddPart n
@@ -111,9 +111,9 @@ def mrConditionFails (b : ℕ) (n : ℕ) : Bool :=
   decide (b ^ d % n ≠ 1 % n) &&
     (List.range s).all (fun r => decide (b ^ (oddPart n * 2 ^ r) % n ≠ (n - 1) % n))
 
-/-- Soundness of mrConditionFails: if mrConditionFails b n = true, then 
+/-- Soundness of mrConditionFails: if mrConditionFails b n = true, then
  is not a strong
-pseudoprime to base . Note this holds without needing to check whether 
+pseudoprime to base . Note this holds without needing to check whether
  is prime or composite. -/
 theorem not_isStrongPsp_of_mrConditionFails {b n : ℕ} (h : mrConditionFails b n = true) :
     ¬ IsStrongPsp b n := by
@@ -133,9 +133,9 @@ def isNotStrongPspSet23Dec (n : ℕ) : Bool :=
   else if n < 2047 then true
   else mrConditionFails 2 n || mrConditionFails 3 n
 
-/-- Soundness of isNotStrongPspSet23Dec: if candidate 
+/-- Soundness of isNotStrongPspSet23Dec: if candidate
  passes the decider,
-then 
+then
  is not a strong pseudoprime to {2, 3}. -/
 theorem isNotStrongPspSet23Dec_sound {n : ℕ} (h : isNotStrongPspSet23Dec n = true) :
     ¬ IsStrongPspSet {2, 3} n := by
