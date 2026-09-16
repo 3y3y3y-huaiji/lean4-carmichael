@@ -123,8 +123,13 @@ In compliance with the **Mathlib Community & LLM Contribution Guidelines**:
 - This formalization project was developed and explored with the assistance of Large Language Models (LLMs).
 - All formal definitions, theorems, lemmas, and proofs have been strictly compiled and machine-checked by **Lean 4 (v4.33.1)** and the Lean 4 kernel with **0 sorry** and **0 custom axioms**.
 
+## Acknowledgments
+
+Special thanks to **Felix Pernegger** for valuable feedback, review suggestions, and discussions regarding Lean 4 formalization style and proof simplification.
+
 ## License
 
 Dual-licensed under:
 - **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE) or <https://www.apache.org/licenses/LICENSE-2.0>)
 - **Mulan Permissive Software License, Version 2 (木兰宽松许可证, 第2版, MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN) or <http://license.coscl.org.cn/MulanPSL2>)
+

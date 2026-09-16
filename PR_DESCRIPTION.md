@@ -35,7 +35,12 @@ Rather than a brute-force search over all integers $< 561$, we combine theoretic
 - [x] Lines $\le 100$ characters.
 - [x] Passes all Mathlib linters (`#lint`).
 
+## Acknowledgments
+
+We thank Felix Pernegger for helpful suggestions on Lean 4 formalization style and proof simplification.
+
 ---
 <!-- Explicit LLM declaration per community guidelines -->
 *Note: Parts of the formalization and proof search were generated and verified with assistance from an LLM.*
+
 

@@ -114,8 +114,13 @@ lake env lean Carmichael/StrongPspMulti.lean
 - 本项目的形式化证明、策略探索与代码重构在大型语言模型（LLM）的辅助下完成。
 - 项目中包含的所有数学定义、引理与核心定理，均由 **Lean 4 (v4.33.1)** 内核执行了严格的机器类型检查与形式化验证，达成 **0 sorry** 与 **0 非标准公理** 的完全机器背书。
 
+## 致谢 (Acknowledgments)
+
+特别鸣谢 **Felix Pernegger** 对本项目提出的宝贵评审意见与讨论，特别是在遵循 Lean 4 / Mathlib 惯例、简化证明以及充分利用现有库定理方面的指导与建议。
+
 ## 开源许可证
 
 本项目采用双重开源许可证授权：
 - **Apache License, Version 2.0** ([LICENSE-APACHE](LICENSE-APACHE))
 - **木兰宽松许可证, 第2版 (MulanPSL-2.0)** ([LICENSE-MULAN](LICENSE-MULAN))
+
