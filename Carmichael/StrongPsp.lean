@@ -3,6 +3,7 @@ Copyright (c) 2026 Su MingKai. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Su MingKai
 -/
+import Carmichael.Poulet
 import Mathlib.Tactic
 
 /-!
@@ -13,33 +14,36 @@ This module formally establishes that 2047 is the strictly smallest strong pseud
 
 ## Mathematical Overview
 
-A natural number
- is a strong pseudoprime to base  if it is an odd composite number
- ≥ 3
-that passes the Miller-Rabin primality test to base : writing
- - 1 = d * 2^s with d odd,
+A natural number `n` is a strong pseudoprime to base `b` if it is an odd composite number `n ≥ 3`
+that passes the Miller-Rabin primality test to base `b`: writing `n - 1 = d * 2^s` with `d` odd,
 either:
-- ^d ≡ 1 [MOD n], or
-- ∃ r < s, b^(d * 2^r) ≡ n - 1 [MOD n].
+- `b^d ≡ 1 [MOD n]`, or
+- `∃ r < s, b^(d * 2^r) ≡ n - 1 [MOD n]`.
 
-2047 is the 11th Mersenne number ^{11} - 1 = 23 \times 89$. Since  - 1 = 2046 = 1023 \times 2^1$,
-we have  = 1023$ and  = 1$. Because  = 11 \times 93$,
-2^{1023} = (2^{11})^{93} \equiv 1^{93} = 1 \pmod{2047},
+2047 is the 11th Mersenne number `2^11 - 1 = 23 * 89`. Since `n - 1 = 2046 = 1023 * 2^1`,
+we have `d = 1023` and `s = 1`. Because `1023 = 11 * 93`,
+`2^1023 = (2^11)^93 ≡ 1^93 = 1 [MOD 2047]`,
 making 2047 the first strong pseudoprime to base 2.
 
 ## Main Results
 
-- Nat.oddPart, Nat.twoPowerPart: Computable decomposition  - 1 = d \cdot 2^s$.
-- Nat.oddPart_mul_twoPowerPart: Specification  \cdot 2^s = n - 1$.
-- Nat.IsStrongPsp: Standard mathematical definition of base- strong pseudoprime.
-- Nat.isPrimeDec2047: Trial division prime decider for all numbers  < 2047$.
-- Nat.isNotStrongPspDec2: Computable decider certifying that $ is not a base-2 strong pseudoprime.
-- Nat.isNotStrongPspDec2_sound: Soundness of the single-candidate decider.
-- Nat.checkStrongPspBound2: Bounded reflection checker for  < N$.
-- Nat.checkStrongPspBound2_sound: Soundness of the bounded checker.
-- Nat.smallest_strong_psp_two: No natural number  < 2047$ is a strong pseudoprime to base 2.
-- Nat.strong_psp_2047: 2047 is a strong pseudoprime to base 2.
-- Nat.isStrongPsp_min: Minimality: any base-2 strong pseudoprime is $\ge 2047$.
+- `Nat.oddPart`, `Nat.twoPowerPart`: Computable decomposition `n - 1 = d * 2^s`.
+- `Nat.oddPart_mul_twoPowerPart`: Specification `d * 2^s = n - 1`.
+- `Nat.MillerRabinCond`: Miller-Rabin algebraic congruence condition.
+- `Nat.millerRabinPass`: Computable decider for `MillerRabinCond b n`.
+- `Nat.IsStrongPsp`: Mathematical definition of base-`b` strong pseudoprime.
+- `Nat.isStrongPspDec`: Computable decider for `IsStrongPsp b n`.
+- `Nat.isPoulet_of_isStrongPsp_two`: Hierarchy theorem: every base-2 strong pseudoprime is a
+  Poulet number.
+- `Nat.isPrimeDec2047`: Trial division prime decider for all numbers `n < 2047`.
+- `Nat.isNotStrongPspDec2`: Computable decider certifying that `n` is not a base-2 strong
+  pseudoprime.
+- `Nat.isNotStrongPspDec2_sound`: Soundness of the single-candidate decider.
+- `Nat.checkStrongPspBound2`: Bounded reflection checker for `n < N`.
+- `Nat.checkStrongPspBound2_sound`: Soundness of the bounded checker.
+- `Nat.smallest_strong_psp_two`: No natural number `n < 2047` is a strong pseudoprime to base 2.
+- `Nat.strong_psp_2047`: 2047 is a strong pseudoprime to base 2.
+- `Nat.isStrongPsp_min`: Minimality: any base-2 strong pseudoprime is `≥ 2047`.
 -/
 
 set_option exponentiation.threshold 3000
@@ -47,7 +51,7 @@ set_option maxRecDepth 500000
 
 namespace Nat
 
-/-- Auxiliary function to decompose m into (d, s) such that m = d * 2^s with d odd. -/
+/-- Auxiliary function to decompose `m` into `(d, s)` such that `m = d * 2^s` with `d` odd. -/
 def splitTwoAux : ℕ → ℕ → ℕ × ℕ
 | 0, m => (m, 0)
 | fuel + 1, m =>
@@ -58,15 +62,13 @@ def splitTwoAux : ℕ → ℕ → ℕ × ℕ
   else
     (m, 0)
 
-/-- Computable decomposition of m into (d, s) such that m = d * 2^s. -/
+/-- Computable decomposition of `m` into `(d, s)` such that `m = d * 2^s`. -/
 def splitTwo (m : ℕ) : ℕ × ℕ := splitTwoAux m m
 
-/-- The odd factor d in the 2-adic decomposition
- - 1 = d * 2^s. -/
+/-- The odd factor `d` in the 2-adic decomposition `n - 1 = d * 2^s`. -/
 def oddPart (n : ℕ) : ℕ := (splitTwo (n - 1)).1
 
-/-- The exponent s of 2 in the 2-adic decomposition
- - 1 = d * 2^s. -/
+/-- The exponent `s` of 2 in the 2-adic decomposition `n - 1 = d * 2^s`. -/
 def twoPowerPart (n : ℕ) : ℕ := (splitTwo (n - 1)).2
 
 lemma splitTwoAux_spec : ∀ (fuel m : ℕ), m ≤ fuel →
@@ -89,12 +91,12 @@ lemma splitTwoAux_spec : ∀ (fuel m : ℕ), m ≤ fuel →
 lemma splitTwo_spec (m : ℕ) : (splitTwo m).1 * 2 ^ (splitTwo m).2 = m :=
   splitTwoAux_spec m m (le_refl m)
 
-/-- The fundamental decomposition equality: oddPart n * 2 ^ (twoPowerPart n) = n - 1. -/
+/-- The fundamental decomposition equality: `oddPart n * 2 ^ (twoPowerPart n) = n - 1`. -/
 theorem oddPart_mul_twoPowerPart (n : ℕ) :
     oddPart n * 2 ^ twoPowerPart n = n - 1 :=
   splitTwo_spec (n - 1)
 
-/-- Auxiliary lemma: for any non-zero m ≤ fuel, (splitTwoAux fuel m).1 is odd. -/
+/-- Auxiliary lemma: for any non-zero `m ≤ fuel`, `(splitTwoAux fuel m).1` is odd. -/
 lemma splitTwoAux_odd : ∀ (fuel m : ℕ), m ≤ fuel → m ≠ 0 →
     (splitTwoAux fuel m).1 % 2 ≠ 0
 | 0, 0, _, hne => by contradiction
@@ -108,8 +110,7 @@ lemma splitTwoAux_odd : ∀ (fuel m : ℕ), m ≤ fuel → m ≠ 0 →
     exact splitTwoAux_odd fuel (m / 2) hdiv_le hdiv_ne
   · exact heven
 
-/-- For any
- ≥ 2, oddPart n is odd. -/
+/-- For any `n ≥ 2`, `oddPart n` is odd. -/
 theorem odd_oddPart {n : ℕ} (hn : 2 ≤ n) : Odd (oddPart n) := by
   have hm : n - 1 ≠ 0 := by omega
   have hmod := splitTwoAux_odd (n - 1) (n - 1) (le_refl (n - 1)) hm
@@ -118,14 +119,41 @@ theorem odd_oddPart {n : ℕ} (hn : 2 ≤ n) : Odd (oddPart n) := by
   rw [h1]
   exact Nat.mod_two_ne_zero.mp hmod
 
-/-- A natural number n is a strong pseudoprime (Miller-Rabin pseudoprime) to base b if
-it is an odd composite number n ≥ 3 such that either b^d ≡ 1 [MOD n] or
-∃ r < s, b^(d * 2^r) ≡ n - 1 [MOD n], where n - 1 = d * 2^s with d odd.
-For n < 3, even n, or prime n, IsStrongPsp b n is False. -/
+/-- The Miller-Rabin algebraic congruence condition for base `b` and integer `n`:
+either `b^d ≡ 1 [MOD n]` or `∃ r < s, b^(d * 2^r) ≡ n - 1 [MOD n]`,
+where `n - 1 = d * 2^s` with `d` odd. -/
+def MillerRabinCond (b : ℕ) (n : ℕ) : Prop :=
+  b ^ (oddPart n) ≡ 1 [MOD n] ∨
+    ∃ r < twoPowerPart n, b ^ (oddPart n * 2 ^ r) ≡ n - 1 [MOD n]
+
+/-- Computable decider for the Miller-Rabin congruence condition `MillerRabinCond b n`. -/
+def millerRabinPass (b : ℕ) (n : ℕ) : Bool :=
+  let d := oddPart n
+  let s := twoPowerPart n
+  decide (b ^ d % n = 1 % n) ||
+    (List.range s).any (fun r => decide (b ^ (d * 2 ^ r) % n = (n - 1) % n))
+
+/-- Equivalence of `millerRabinPass` with `MillerRabinCond`. -/
+theorem millerRabinPass_iff (b n : ℕ) :
+    millerRabinPass b n = true ↔ MillerRabinCond b n := by
+  unfold millerRabinPass MillerRabinCond Nat.ModEq
+  simp only [Bool.or_eq_true, decide_eq_true_iff, List.any_eq_true, List.mem_range]
+
+/-- A natural number `n` is a strong pseudoprime (Miller-Rabin pseudoprime) to base `b` if
+it is an odd composite number `n ≥ 3` that satisfies the Miller-Rabin congruence condition.
+For `n < 3`, even `n`, or prime `n`, `IsStrongPsp b n` is `False`. -/
 def IsStrongPsp (b : ℕ) (n : ℕ) : Prop :=
-  3 ≤ n ∧ Odd n ∧ ¬ n.Prime ∧
-    (b ^ (oddPart n) ≡ 1 [MOD n] ∨
-      ∃ r < twoPowerPart n, b ^ (oddPart n * 2 ^ r) ≡ n - 1 [MOD n])
+  3 ≤ n ∧ Odd n ∧ ¬ n.Prime ∧ MillerRabinCond b n
+
+/-- Computable decider evaluating whether `n` is a strong pseudoprime to base `b`. -/
+def isStrongPspDec (b : ℕ) (n : ℕ) : Bool :=
+  decide (3 ≤ n) && decide (n % 2 = 1) && (!decide (Nat.Prime n)) && millerRabinPass b n
+
+/-- Equivalence of `isStrongPspDec` with `IsStrongPsp`. -/
+theorem isStrongPspDec_iff (b n : ℕ) :
+    isStrongPspDec b n = true ↔ IsStrongPsp b n := by
+  unfold isStrongPspDec IsStrongPsp
+  simp [Nat.odd_iff, millerRabinPass_iff, and_assoc]
 
 lemma not_isStrongPsp_of_lt_three {b n : ℕ} (h : n < 3) : ¬ IsStrongPsp b n := by
   intro ⟨h3, _⟩
@@ -141,7 +169,56 @@ lemma not_isStrongPsp_of_prime {b n : ℕ} (h : n.Prime) : ¬ IsStrongPsp b n :=
   intro hpsp
   exact hpsp.2.2.1 h
 
-/-- Odd prime divisors up to $\lfloor\sqrt{2047}\rfloor = 45$. -/
+/-- Auxiliary lemma: `(n - 1)^2 ≡ 1 [MOD n]` for any `n ≥ 2`. -/
+lemma modeq_sub_one_sq {n : ℕ} (hn : 2 ≤ n) : (n - 1) ^ 2 ≡ 1 [MOD n] := by
+  have hid : (n - 1) ^ 2 = n * (n - 2) + 1 := by
+    apply Nat.cast_injective (R := ℤ)
+    rw [Nat.cast_pow, Nat.cast_sub (by omega : 1 ≤ n)]
+    rw [Nat.cast_add, Nat.cast_mul, Nat.cast_sub (by omega : 2 ≤ n)]
+    push_cast
+    ring
+  rw [Nat.ModEq, hid, Nat.add_mod, Nat.mul_mod_right, zero_add, Nat.mod_mod]
+
+/-- Repeated squaring from a `-1` residue reaches `1` at the top power of 2. -/
+lemma pow_two_pow_modeq_one {b d r s n : ℕ} (hn : 2 ≤ n) (hrs : r < s)
+    (h : b ^ (d * 2 ^ r) ≡ n - 1 [MOD n]) :
+    b ^ (d * 2 ^ s) ≡ 1 [MOD n] := by
+  have hd_succ : d * 2 ^ (r + 1) = (d * 2 ^ r) * 2 := by
+    rw [pow_succ]
+    ring
+  have hpow1 : b ^ (d * 2 ^ (r + 1)) = (b ^ (d * 2 ^ r)) ^ 2 := by
+    rw [hd_succ, pow_mul]
+  have hstep : b ^ (d * 2 ^ (r + 1)) ≡ 1 [MOD n] := by
+    rw [hpow1]
+    have hsq := h.pow 2
+    exact hsq.trans (modeq_sub_one_sq hn)
+  have hd_s : d * 2 ^ s = (d * 2 ^ (r + 1)) * 2 ^ (s - (r + 1)) := by
+    rw [mul_assoc, ← pow_add]
+    congr 2
+    omega
+  rw [hd_s, pow_mul]
+  have hpow_one := hstep.pow (2 ^ (s - (r + 1)))
+  rw [one_pow] at hpow_one
+  exact hpow_one
+
+/-- Every base-2 strong pseudoprime is a Poulet number (base-2 Fermat pseudoprime). -/
+theorem isPoulet_of_isStrongPsp_two {n : ℕ} (h : IsStrongPsp 2 n) : IsPoulet n := by
+  have h3 : 3 ≤ n := h.1
+  have hcomp : ¬ n.Prime := h.2.2.1
+  have h2n : 2 ≤ n := by omega
+  refine ⟨hcomp, h2n, ?_⟩
+  have hmr := h.2.2.2
+  have hdecomp : 2 ^ (n - 1) = 2 ^ (oddPart n * 2 ^ twoPowerPart n) := by
+    rw [oddPart_mul_twoPowerPart]
+  rw [hdecomp]
+  rcases hmr with h1 | ⟨r, hr_lt, hr_eq⟩
+  · have hpow := h1.pow (2 ^ twoPowerPart n)
+    rw [one_pow] at hpow
+    rw [Nat.pow_mul]
+    exact hpow
+  · exact pow_two_pow_modeq_one h2n hr_lt hr_eq
+
+/-- Odd prime divisors up to `⌊√2047⌋ = 45`. -/
 def testPrimes2047 : List ℕ :=
   [3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43]
 
@@ -234,12 +311,8 @@ theorem isPrimeDec2047_iff {n : ℕ} (hn : n < 2047) :
       · left
         omega
 
-/-- Computable decider certifying that
- is NOT a strong pseudoprime to base 2.
-Returns 	rue if
- < 3,
- is even, or
- is detected prime.
+/-- Computable decider certifying that `n` is NOT a strong pseudoprime to base 2.
+Returns `true` if `n < 3`, `n` is even, or `n` is detected prime.
 For odd composite candidates below 2047, verifies that the Miller-Rabin test base 2 fails. -/
 def isNotStrongPspDec2 (n : ℕ) : Bool :=
   if n < 3 then true
@@ -253,8 +326,8 @@ def isNotStrongPspDec2 (n : ℕ) : Bool :=
         (List.range s).all (fun r => decide (2 ^ (d * 2 ^ r) % n ≠ (n - 1) % n))
   else false
 
-/-- Soundness of isNotStrongPspDec2: if isNotStrongPspDec2 n = true,
-then n is not a strong pseudoprime to base 2. -/
+/-- Soundness of `isNotStrongPspDec2`: if `isNotStrongPspDec2 n = true`,
+then `n` is not a strong pseudoprime to base 2. -/
 theorem isNotStrongPspDec2_sound {n : ℕ} (h : isNotStrongPspDec2 n = true) :
     ¬ IsStrongPsp 2 n := by
   intro ⟨h3, hodd, hcomp, hmr⟩
@@ -276,14 +349,13 @@ theorem isNotStrongPspDec2_sound {n : ℕ} (h : isNotStrongPspDec2 n = true) :
       have hmod_eq : 2 ^ (oddPart n * 2 ^ r) % n = (n - 1) % n := hr_eq
       exact hspec hmod_eq
 
-/-- Bounded verification checker: returns true if all
- < N are certified not strong pseudoprimes
-to base 2. -/
+/-- Bounded verification checker: returns `true` if all `n < N` are certified not strong
+pseudoprimes to base 2. -/
 def checkStrongPspBound2 (N : ℕ) : Bool :=
   (List.range N).all isNotStrongPspDec2
 
-/-- Soundness of checkStrongPspBound2: if checkStrongPspBound2 N = true,
-then no natural number strictly below N is a strong pseudoprime to base 2. -/
+/-- Soundness of `checkStrongPspBound2`: if `checkStrongPspBound2 N = true`,
+then no natural number strictly below `N` is a strong pseudoprime to base 2. -/
 theorem checkStrongPspBound2_sound {N : ℕ} (h : checkStrongPspBound2 N = true) :
     ∀ n < N, ¬ IsStrongPsp 2 n := by
   intro n hn
@@ -319,7 +391,9 @@ theorem isStrongPsp_min : ∀ n, IsStrongPsp 2 n → 2047 ≤ n := by
 
 end Nat
 
-export Nat (IsStrongPsp oddPart twoPowerPart oddPart_mul_twoPowerPart odd_oddPart
+export Nat (IsStrongPsp MillerRabinCond millerRabinPass millerRabinPass_iff
+  isStrongPspDec isStrongPspDec_iff isPoulet_of_isStrongPsp_two
+  oddPart twoPowerPart oddPart_mul_twoPowerPart odd_oddPart
   not_isStrongPsp_of_lt_three not_isStrongPsp_of_even not_isStrongPsp_of_prime
   testPrimes2047 isPrimeDec2047 isPrimeDec2047_prime isPrimeDec2047_iff
   isNotStrongPspDec2 isNotStrongPspDec2_sound checkStrongPspBound2

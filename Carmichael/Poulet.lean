@@ -71,6 +71,10 @@ theorem isPoulet_of_isCarmichael {n : ℕ} (h : IsCarmichael n) : IsPoulet n := 
   have hmod := (probablePrime_iff_modEq n (by decide)).mp hpp
   exact ⟨hcomp, by omega, hmod⟩
 
+/-- Any Carmichael number (formulation for `Nat.Carmichael`) is a Poulet number. -/
+theorem isPoulet_of_carmichael {n : ℕ} (h : Nat.Carmichael n) : IsPoulet n :=
+  isPoulet_of_isCarmichael (isCarmichael_iff_carmichael.mpr h)
+
 /-- Fast computable boolean decider checking whether `n` is certified NOT a Poulet number.
 For numbers below 341, every candidate is either `< 2`, prime (verified via `isPrimeDec`),
 or fails Fermat's congruence `2^(n-1) ≡ 1 [MOD n]`. -/
@@ -139,7 +143,7 @@ theorem isPoulet_min : ∀ n, IsPoulet n → 341 ≤ n := by
 
 end Nat
 
-export Nat (IsPoulet isPoulet_iff_fermatPsp isPoulet_of_isCarmichael
+export Nat (IsPoulet isPoulet_iff_fermatPsp isPoulet_of_isCarmichael isPoulet_of_carmichael
   coprime_two_of_odd isNotPouletDec checkPouletBound
   not_isPoulet_of_dec checkPouletBound_sound isPoulet_341
   fermatPsp_two_341 not_isPoulet_of_lt_341 not_fermatPsp_two_of_lt_341

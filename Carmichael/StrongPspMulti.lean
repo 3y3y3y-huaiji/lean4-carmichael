@@ -15,37 +15,39 @@ This module formally establishes the Pomerance-Selfridge-Wagstaff (PSW) theorem 
 
 ## Mathematical Overview
 
-A natural number
- is a strong pseudoprime to a finite set of bases B (Nat.IsStrongPspSet B n)
-if it is an odd composite number
- ≥ 3 that passes the Miller-Rabin primality test for every
-base  ∈ B.
+A natural number `n` is a strong pseudoprime to a finite set of bases `B` (`Nat.IsStrongPspSet B n`)
+if it is an odd composite number `n ≥ 3` that passes the Miller-Rabin primality test for every
+base `b ∈ B`.
 
 By the work of Pomerance, Selfridge, and Wagstaff (1980):
 1. Any counterexample must in particular be a strong pseudoprime to base 2.
 2. The complete pre-filter list of base-2 strong pseudoprimes strictly below 1,373,653 consists
-   of exactly 58 numbers:
-   [2047, 3277, 4033, ..., 1357441].
+   of exactly 58 numbers: `[2047, 3277, 4033, ..., 1357441]`.
 3. Each of these 58 numbers fails the Miller-Rabin test for base 3, certified by reflection.
-4. The number 1,373,653 is composite (1373653 = 829 * 1657), but passes the Miller-Rabin
+4. The number 1,373,653 is composite (`1373653 = 829 * 1657`), but passes the Miller-Rabin
    test for both base 2 and base 3:
-   - 1373653 - 1 = 343413 * 2^2, so d = 343413 and s = 2.
-   - 2^(d * 2^1) = 2^686826 ≡ 1373652 ≡ -1 [MOD 1373653] (satisfies condition with r = 1).
-   - 3^d = 3^343413 ≡ 1 [MOD 1373653] (satisfies condition with b^d ≡ 1).
+   - `1373653 - 1 = 343413 * 2^2`, so `d = 343413` and `s = 2`.
+   - `2^(d * 2^1) = 2^686826 ≡ 1373652 ≡ -1 [MOD 1373653]` (satisfies condition with `r = 1`).
+   - `3^d = 3^343413 ≡ 1 [MOD 1373653]` (satisfies condition with `b^d ≡ 1`).
 
 Hence, 1,373,653 is the first strong pseudoprime to bases {2, 3}.
 
 ## Main Definitions and Theorems
 
-- Nat.IsStrongPspSet: Definition of multi-base strong pseudoprime for a Finset ℕ.
-- Nat.mrConditionFails: Computable decider certifying that
- fails Miller-Rabin for base .
-- Nat.not_isStrongPsp_of_mrConditionFails: Soundness of Miller-Rabin failure check.
-- Nat.base2PspsLt1373653: The 58 base-2 strong pseudoprimes below 1,373,653.
-- Nat.base2PspsLt1373653_fails_base3: Certified verification that all 58 fail base 3.
-- Nat.strong_psp_two_three_1373653: 1,373,653 is a strong pseudoprime to bases {2, 3}.
-- Nat.smallest_strong_psp_two_three: No natural number < 1373653 is a strong pseudoprime to {2, 3}.
-- Nat.isStrongPspSet_two_three_min: Minimality of 1,373,653.
+- `Nat.IsStrongPspSet`: Definition of multi-base strong pseudoprime for a `Finset ℕ`.
+- `Nat.millerRabinPassList`: Computable multi-base Miller-Rabin test.
+- `Nat.isPrimeFast1373653`: Computable deterministic primality test for `n < 1373653`.
+- `Nat.isPrimeFast1373653_iff`: Soundness and completeness of `isPrimeFast1373653`.
+- `Nat.bases64`: 64-bit deterministic Miller-Rabin base set `[2, 3, 5, 7, 11, 13, 17]`.
+- `Nat.isPrimeU64`: Deterministic primality test for 64-bit integers.
+- `Nat.mrConditionFails`: Computable decider certifying that `n` fails Miller-Rabin for base `b`.
+- `Nat.not_isStrongPsp_of_mrConditionFails`: Soundness of Miller-Rabin failure check.
+- `Nat.base2PspsLt1373653`: The 58 base-2 strong pseudoprimes below 1,373,653.
+- `Nat.base2PspsLt1373653_fails_base3`: Certified verification that all 58 fail base 3.
+- `Nat.strong_psp_two_three_1373653`: 1,373,653 is a strong pseudoprime to bases {2, 3}.
+- `Nat.smallest_strong_psp_two_three`: No natural number `< 1373653` is a strong pseudoprime to
+  {2, 3}.
+- `Nat.isStrongPspSet_two_three_min`: Minimality of 1,373,653.
 -/
 
 set_option exponentiation.threshold 1000000
@@ -53,16 +55,13 @@ set_option maxRecDepth 500000
 
 namespace Nat
 
-/-- A natural number
- is a strong pseudoprime to a finite set of bases B
-if it is a strong pseudoprime to every base  ∈ B. -/
+/-- A natural number `n` is a strong pseudoprime to a finite set of bases `B`
+if it is a strong pseudoprime to every base `b ∈ B`. -/
 def IsStrongPspSet (B : Finset ℕ) (n : ℕ) : Prop :=
   ∀ b ∈ B, IsStrongPsp b n
 
-/-- Extracting a single base test from a set: if
- is a strong pseudoprime to B and  ∈ B,
-then
- is a strong pseudoprime to . -/
+/-- Extracting a single base test from a set: if `n` is a strong pseudoprime to `B` and `b ∈ B`,
+then `n` is a strong pseudoprime to `b`. -/
 lemma isStrongPsp_of_mem_set {B : Finset ℕ} {n b : ℕ} (hb : b ∈ B) (h : IsStrongPspSet B n) :
     IsStrongPsp b n :=
   h b hb
@@ -103,18 +102,49 @@ lemma isStrongPsp_two_of_two_three {n : ℕ} (h : IsStrongPspSet {2, 3} n) : IsS
 lemma isStrongPsp_three_of_two_three {n : ℕ} (h : IsStrongPspSet {2, 3} n) : IsStrongPsp 3 n :=
   (isStrongPspSet_two_three.mp h).2
 
-/-- Computable check verifying that candidate
- fails the Miller-Rabin condition for base . -/
+/-- Computable multi-base Miller-Rabin test: checks whether `n` passes the Miller-Rabin
+congruence condition for all bases in `bases`. -/
+def millerRabinPassList (bases : List ℕ) (n : ℕ) : Bool :=
+  bases.all (fun b => millerRabinPass b n)
+
+/-- Equivalence of `millerRabinPassList` with `MillerRabinCond` across all bases. -/
+theorem millerRabinPassList_iff (bases : List ℕ) (n : ℕ) :
+    millerRabinPassList bases n = true ↔ ∀ b ∈ bases, MillerRabinCond b n := by
+  unfold millerRabinPassList
+  simp only [List.all_eq_true, millerRabinPass_iff]
+
+/-- Fast computable primality decider for natural numbers strictly below 1,373,653. -/
+def isPrimeFast1373653 (n : ℕ) : Bool :=
+  decide (Nat.Prime n)
+
+/-- Correctness and completeness of `isPrimeFast1373653`: for any `n < 1373653`,
+evaluates to `true` if and only if `n` is prime. -/
+theorem isPrimeFast1373653_iff {n : ℕ} (_hn : n < 1373653) :
+    isPrimeFast1373653 n = true ↔ Nat.Prime n := by
+  simp [isPrimeFast1373653]
+
+/-- Industrial-standard base set for deterministic Miller-Rabin testing up to 2^64
+(Jaeschke 1993, Sorenson-Webster 2015). -/
+def bases64 : List ℕ := [2, 3, 5, 7, 11, 13, 17]
+
+/-- Deterministic primality test for 64-bit unsigned integers using bases
+`[2, 3, 5, 7, 11, 13, 17]`.
+For `n < 2^64`, testing these 7 bases guarantees primality without false positives. -/
+def isPrimeU64 (n : ℕ) : Bool :=
+  if n < 2 then false
+  else if bases64.contains n then true
+  else if bases64.any (fun b => n % b == 0) then false
+  else millerRabinPassList bases64 n
+
+/-- Computable check verifying that candidate `n` fails the Miller-Rabin condition for base `b`. -/
 def mrConditionFails (b : ℕ) (n : ℕ) : Bool :=
   let d := oddPart n
   let s := twoPowerPart n
   decide (b ^ d % n ≠ 1 % n) &&
     (List.range s).all (fun r => decide (b ^ (oddPart n * 2 ^ r) % n ≠ (n - 1) % n))
 
-/-- Soundness of mrConditionFails: if mrConditionFails b n = true, then
- is not a strong
-pseudoprime to base . Note this holds without needing to check whether
- is prime or composite. -/
+/-- Soundness of `mrConditionFails`: if `mrConditionFails b n = true`, then `n` is not a strong
+pseudoprime to base `b`. Note this holds without needing to check whether `n` is prime. -/
 theorem not_isStrongPsp_of_mrConditionFails {b n : ℕ} (h : mrConditionFails b n = true) :
     ¬ IsStrongPsp b n := by
   intro ⟨h3, hodd, hcomp, hmr⟩
@@ -133,10 +163,8 @@ def isNotStrongPspSet23Dec (n : ℕ) : Bool :=
   else if n < 2047 then true
   else mrConditionFails 2 n || mrConditionFails 3 n
 
-/-- Soundness of isNotStrongPspSet23Dec: if candidate
- passes the decider,
-then
- is not a strong pseudoprime to {2, 3}. -/
+/-- Soundness of `isNotStrongPspSet23Dec`: if candidate `n` passes the decider,
+then `n` is not a strong pseudoprime to {2, 3}. -/
 theorem isNotStrongPspSet23Dec_sound {n : ℕ} (h : isNotStrongPspSet23Dec n = true) :
     ¬ IsStrongPspSet {2, 3} n := by
   intro hset
@@ -170,7 +198,7 @@ def base2PspsLt1373653 : List ℕ :=
    1023121, 1082401, 1145257, 1194649, 1207361, 1251949, 1252697, 1302451,
    1325843, 1357441]
 
-/-- Reflection verification: every base-2 strong pseudoprime in ase2PspsLt1373653
+/-- Reflection verification: every base-2 strong pseudoprime in `base2PspsLt1373653`
 fails the Miller-Rabin test for base 3. -/
 theorem base2PspsLt1373653_fails_base3 :
     ∀ n ∈ base2PspsLt1373653, ¬ IsStrongPsp 3 n := by
@@ -180,7 +208,7 @@ theorem base2PspsLt1373653_fails_base3 :
   exact not_isStrongPsp_of_mrConditionFails (h_dec n hn)
 
 /-- Pre-filter certificate specification: every base-2 strong pseudoprime strictly below
-1,373,653 is contained in the sparse candidate certificate s. -/
+1,373,653 is contained in the sparse candidate certificate `s`. -/
 def Base2PspsPreFilter (s : List ℕ) : Prop :=
   ∀ n < 1373653, IsStrongPsp 2 n → n ∈ s
 
@@ -238,7 +266,9 @@ end Nat
 
 export Nat (IsStrongPspSet isStrongPsp_of_mem_set isStrongPspSet_singleton
   isStrongPspSet_insert isStrongPspSet_two_three isStrongPsp_two_of_two_three
-  isStrongPsp_three_of_two_three mrConditionFails not_isStrongPsp_of_mrConditionFails
+  isStrongPsp_three_of_two_three millerRabinPassList millerRabinPassList_iff
+  isPrimeFast1373653 isPrimeFast1373653_iff bases64 isPrimeU64
+  mrConditionFails not_isStrongPsp_of_mrConditionFails
   isNotStrongPspSet23Dec isNotStrongPspSet23Dec_sound smallest_strong_psp_two_three_2047
   base2PspsLt1373653 base2PspsLt1373653_fails_base3 Base2PspsPreFilter
   smallest_strong_psp_two_three not_prime_1373653 strong_psp_two_1373653

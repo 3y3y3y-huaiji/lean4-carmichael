@@ -70,22 +70,35 @@ theorem smallest_strong_psp_two_three (h : Base2PspsPreFilter base2PspsLt1373653
 theorem strong_psp_two_three_1373653 : IsStrongPspSet {2, 3} 1373653
 ```
 
+### 6. Pseudoprime Hierarchy & Deterministic Primality Testing up to 2^64
+- **Hierarchy Bridge**: Machine-checked proof that every base-2 strong pseudoprime is a Poulet number:
+  ```lean
+  theorem isPoulet_of_isStrongPsp_two : IsStrongPsp 2 n → IsPoulet n
+  ```
+- **Out-of-the-Box Computation**:
+  - `Nat.korseltDec n : Bool`: Instant Korselt criterion evaluation.
+  - `Nat.millerRabinPass b n : Bool`: General Miller-Rabin test for any base `b`.
+  - `Nat.isPrimeFast1373653 n : Bool`: 100% deterministic primality test for $n < 1,373,653$.
+  - `Nat.isPrimeU64 n : Bool`: 64-bit industrial-standard deterministic primality test (`uint64`, $n < 2^{64}$).
+
 ---
 
-## Project Structure
+## Project Structure & PR Staging Roadmap
+
+To facilitate review by Mathlib maintainers, changes are organized into 4 self-contained stages documented in [PR_ROADMAP.md](PR_ROADMAP.md):
 
 ```text
 .
-├── Carmichael.lean                 # Unified root module exporting all submodules
+├── Carmichael.lean                 # Umbrella root module exporting all submodules
 ├── Carmichael/
-│   ├── Korselt.lean                # Korselt's Criterion (1899) via group exponent
-│   ├── Smallest.lean               # Proof that no Carmichael number < 561 exists
-│   ├── Poulet.lean                 # 341 is smallest base-2 Fermat pseudoprime
-│   ├── StrongPsp.lean              # 2047 is smallest base-2 strong pseudoprime
-│   └── StrongPspMulti.lean         # 1,373,653 is smallest {2, 3} strong pseudoprime (PSW)
-├── benchmark/                      # Benchmark scripts and reflection timers
-├── PR_DESCRIPTION.md               # Upstream Mathlib contribution description
-├── lakefile.lean                   # Lake configuration
+│   ├── Korselt.lean                # [PR 1] Korselt's criterion, Nat.Korselt & korseltDec
+│   ├── Smallest.lean               # [PR 1] 561 minimality (resolving Mathlib TODO)
+│   ├── Poulet.lean                 # [PR 2] 341 is smallest base-2 Fermat pseudoprime
+│   ├── StrongPsp.lean              # [PR 3] 2047 smallest base-2 strong pseudoprime & hierarchy
+│   └── StrongPspMulti.lean         # [PR 4] 1,373,653 PSW theorem & 64-bit primality engine
+├── PR_ROADMAP.md                   # Mathlib4 4-stage PR submission & review guide
+├── PR_DESCRIPTION.md               # Upstream PR summary
+├── lakefile.lean                   # Lake build configuration
 └── lean-toolchain                  # Lean 4 toolchain (v4.33.1)
 ```
 

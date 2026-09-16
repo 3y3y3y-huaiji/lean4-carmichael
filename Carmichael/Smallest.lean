@@ -3,7 +3,6 @@ Copyright (c) 2026 Su MingKai. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Su MingKai
 -/
-import Carmichael
 import Carmichael.Korselt
 import Mathlib.Tactic
 import Mathlib.Data.Nat.Squarefree
@@ -55,24 +54,23 @@ theorem isCarmichael_iff_carmichael {n : ℕ} : n.IsCarmichael ↔ Nat.Carmichae
     exact hp Nat.prime_two
 
 /-- Korselt's criterion for IsCarmichael: `n` is Carmichael iff `2 < n`, composite,
-squarefree, and `p - 1 ∣ n - 1` for all prime divisors `p ∣ n`. -/
-theorem isCarmichael_iff_korselt {n : ℕ} :
-    n.IsCarmichael ↔ 2 < n ∧ ¬ n.Prime ∧ Squarefree n ∧
-      ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1) := by
+and satisfies Korselt's condition. -/
+theorem isCarmichael_iff_korselt (n : ℕ) :
+    n.IsCarmichael ↔ 2 < n ∧ ¬ n.Prime ∧ Korselt n := by
+  rw [isCarmichael_iff_carmichael, carmichael_iff_korselt]
   constructor
-  · rintro ⟨h2, hp, hpp⟩
-    have h1 : 1 < n := by omega
-    have hc : Nat.Carmichael n := ⟨hp, h1, hpp⟩
-    have hk := (carmichael_iff_korselt n h1 hp).mp hc
-    exact ⟨h2, hp, hk.1, hk.2⟩
-  · rintro ⟨h2, hp, hsq, hk⟩
-    have h1 : 1 < n := by omega
-    have hc := (carmichael_iff_korselt n h1 hp).mpr ⟨hsq, hk⟩
-    exact isCarmichael_iff_carmichael.mpr hc
+  · rintro ⟨h1, hp, hk⟩
+    refine ⟨?_, hp, hk⟩
+    by_contra! hle
+    have : n = 2 := by omega
+    subst this
+    exact hp Nat.prime_two
+  · rintro ⟨h2, hp, hk⟩
+    exact ⟨by omega, hp, hk⟩
 
 /-- Any Carmichael number is odd. -/
 theorem IsCarmichael.odd {n : ℕ} (h : n.IsCarmichael) : Odd n := by
-  have hk := isCarmichael_iff_korselt.mp h
+  have hk := (isCarmichael_iff_korselt n).mp h
   rcases hk with ⟨h2, hcomp, hsq, hkdiv⟩
   rw [Nat.odd_iff]
   by_contra! heven
@@ -110,7 +108,7 @@ theorem IsCarmichael.odd {n : ℕ} (h : n.IsCarmichael) : Odd n := by
 theorem not_isCarmichael_mul_primes {p q : ℕ} (hp : p.Prime) (hq : q.Prime) (hpq : p < q) :
     ¬ (p * q).IsCarmichael := by
   intro h
-  have hk := isCarmichael_iff_korselt.mp h
+  have hk := (isCarmichael_iff_korselt (p * q)).mp h
   have hq_dvd : q ∣ p * q := ⟨p, mul_comm p q⟩
   have hdiv : q - 1 ∣ p * q - 1 := hk.2.2.2 q hq hq_dvd
   have hp2 : 2 ≤ p := hp.two_le
@@ -134,7 +132,7 @@ theorem not_isCarmichael_mul_primes {p q : ℕ} (hp : p.Prime) (hq : q.Prime) (h
 theorem not_isCarmichael_of_sq_dvd {n p : ℕ} (hpn : p * p ∣ n) (hp : ¬ IsUnit p) :
     ¬ n.IsCarmichael := by
   intro h
-  have hk := isCarmichael_iff_korselt.mp h
+  have hk := (isCarmichael_iff_korselt n).mp h
   exact hp (hk.2.2.1 p hpn)
 
 /-- If a prime factor `p ∣ n` does not satisfy `p - 1 ∣ n - 1`, then `n` is not Carmichael. -/
@@ -142,7 +140,7 @@ theorem not_isCarmichael_of_prime_factor_not_dvd {n p : ℕ}
     (hp : p.Prime) (hpn : p ∣ n) (hndiv : ¬ (p - 1 ∣ n - 1)) :
     ¬ n.IsCarmichael := by
   intro h
-  have hk := isCarmichael_iff_korselt.mp h
+  have hk := (isCarmichael_iff_korselt n).mp h
   exact hndiv (hk.2.2.2 p hp hpn)
 
 /-- Small prime divisors up to $\sqrt{561} < 24$. -/

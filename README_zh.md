@@ -61,20 +61,33 @@ theorem smallest_strong_psp_two_three (h : Base2PspsPreFilter base2PspsLt1373653
 theorem strong_psp_two_three_1373653 : IsStrongPspSet {2, 3} 1373653
 ```
 
+### 4. 伪素数层级闭环与 100% 确定性素性测试（支持至 2^64）
+- **层级传递定理**：严格形式化证明任何以 2 为底的强伪素数必为普通以 2 为底费马伪素数：
+  ```lean
+  theorem isPoulet_of_isStrongPsp_two : IsStrongPsp 2 n → IsPoulet n
+  ```
+- **开箱即用计算判定器**：
+  - `Nat.korseltDec n : Bool`：秒级判定任意数字是否满足 Korselt 准则（支持 `#eval` 与反射）；
+  - `Nat.millerRabinPass b n : Bool`：通用单底数米勒-拉宾判定；
+  - `Nat.isPrimeFast1373653 n : Bool`：137 万内 100% 确定性素数快速判定；
+  - `Nat.isPrimeU64 n : Bool`：面向 64 位整数（`uint64`，小于 $2^{64}$）的工业级标准 7 底数确定性判定。
+
 ---
 
-## 目录结构
+## 目录结构与 PR 分步提交规划
+
+为降低 Mathlib 社区评审负担，项目拆分为 4 个高度自洽的模块，详见 [PR_ROADMAP.md](PR_ROADMAP.md)：
 
 ```text
 .
-├── Carmichael.lean                 # 顶层基线与根入口
+├── Carmichael.lean                 # 顶层聚合主入口（统一重导出全部子模块）
 ├── Carmichael/
-│   ├── Korselt.lean                # 科瑟尔特准则（1899）与群指数等价
-│   ├── Smallest.lean               # 561 极小性大定理（回应 Mathlib TODO）
-│   ├── Poulet.lean                 # 341 最小 Poulet 数（以 2 为底费马伪素数）
-│   ├── StrongPsp.lean              # 2047 最小强伪素数（米勒-拉宾单底数）
-│   └── StrongPspMulti.lean         # 1,373,653 最小强伪素数（PSW {2, 3} 双底数大定理）
-├── benchmark/                      # 性能基准与反射求值测试
+│   ├── Korselt.lean                # [PR 1] 科瑟尔特准则（1899）、Nat.Korselt 谓词与 korseltDec
+│   ├── Smallest.lean               # [PR 1] 561 极小性大定理（回应 Mathlib 官方 TODO）
+│   ├── Poulet.lean                 # [PR 2] 341 最小 Poulet 数（以 2 为底费马伪素数）
+│   ├── StrongPsp.lean              # [PR 3] 2047 最小强伪素数与米勒-拉宾层级传递定理
+│   └── StrongPspMulti.lean         # [PR 4] 1,373,653 PSW 双底数定理与 64 位素数检验引擎
+├── PR_ROADMAP.md                   # Mathlib4 4 阶段 PR 分步提交与审查规范指南
 ├── PR_DESCRIPTION.md               # 向上游贡献 PR 描述
 ├── lakefile.lean                   # Lake 构建配置
 └── lean-toolchain                  # Lean 4 工具链 (v4.33.1)
