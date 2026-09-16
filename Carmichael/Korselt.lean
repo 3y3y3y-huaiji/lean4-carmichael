@@ -18,30 +18,31 @@ set_option exponentiation.threshold 1000
 This module formalizes Carmichael numbers (absolute Fermat pseudoprimes) and machine-checks
 Korselt's Criterion (1899) in Lean 4 with Mathlib4.
 
-A Carmichael number is a composite natural number 
- > 1 that passes the Fermat primality test
-for all bases  coprime to 
-, i.e., ProbablePrime n b holds for all  with .Coprime n.
+A Carmichael number is a composite natural number `n > 1` that passes the Fermat primality test
+for all bases `b` coprime to `n`, i.e., `ProbablePrime n b` holds for all `b` with `b.Coprime n`.
 
-Korselt's Criterion (1899) characterizes Carmichael numbers as composite numbers 
- > 1
-that are squarefree and satisfy (p - 1) ∣ (n - 1) for every prime divisor p ∣ n.
+Korselt's Criterion (1899) characterizes Carmichael numbers as composite numbers `n > 1`
+that are squarefree and satisfy `(p - 1) ∣ (n - 1)` for every prime divisor `p ∣ n`.
 
 ## Main Definitions and Theorems
 
-- Nat.Carmichael: Definition of Carmichael numbers.
-- carmichael_561: Proof that 561 is a Carmichael number.
-- 
-ot_carmichael_nine: Proof that 9 is not a Carmichael number.
-- Nat.Korselt: First-class predicate for Korselt's criterion.
-- Nat.carmichael_iff_carmichael_dvd: Tripartite equivalence step 1.
-- Nat.carmichael_dvd_iff_korselt: Tripartite equivalence step 2.
-- Nat.carmichael_iff_korselt: Side-condition-free Korselt's criterion.
-- Nat.korseltDec: Computable decider for Korselt's condition.
+- `Nat.Carmichael`: Definition of Carmichael numbers.
+- `carmichael_561`: Proof that 561 is a Carmichael number.
+- `not_carmichael_nine`: Proof that 9 is not a Carmichael number.
+- `Nat.Korselt`: First-class predicate for Korselt's criterion.
+- `Nat.carmichael_iff_carmichael_dvd`: Tripartite equivalence step 1.
+- `Nat.carmichael_dvd_iff_korselt`: Tripartite equivalence step 2.
+- `Nat.carmichael_iff_korselt`: Side-condition-free Korselt's criterion.
+- `Nat.korseltDec`: Computable decider for Korselt's condition.
 
 ## References
 
 * A. Korselt, *Problème chinois*, L'Intermédiaire des Mathématiciens 6 (1899), 142–143.
+
+## Acknowledgments
+
+Special thanks to Felix Pernegger for suggesting the characterization via the
+Carmichael function (`ArithmeticFunction.carmichael`) and discussions on proof simplification.
 -/
 
 /-- Prime factorization of 561: 561 = 3 * 11 * 17. -/
