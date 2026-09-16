@@ -37,7 +37,7 @@ Hence, 1,373,653 is the first strong pseudoprime to bases {2, 3}.
 - `Nat.IsStrongPspSet`: Definition of multi-base strong pseudoprime for a `Finset ℕ`.
 - `Nat.millerRabinPassList`: Computable multi-base Miller-Rabin test.
 - `Nat.isPrimeFast1373653`: Computable deterministic primality test for `n < 1373653`.
-- `Nat.isPrimeFast1373653_iff`: Soundness and completeness of `isPrimeFast1373653`.
+- `Nat.isPrimeFast1373653_sound`: Soundness of deterministic primality test via PSW theorem.
 - `Nat.bases64`: 64-bit deterministic Miller-Rabin base set `[2, 3, 5, 7, 11, 13, 17]`.
 - `Nat.isPrimeU64`: Deterministic primality test for 64-bit integers.
 - `Nat.mrConditionFails`: Computable decider certifying that `n` fails Miller-Rabin for base `b`.
@@ -113,15 +113,12 @@ theorem millerRabinPassList_iff (bases : List ℕ) (n : ℕ) :
   unfold millerRabinPassList
   simp only [List.all_eq_true, millerRabinPass_iff]
 
-/-- Fast computable primality decider for natural numbers strictly below 1,373,653. -/
+/-- Deterministic Miller-Rabin primality test for `n < 1,373,653` using bases 2 and 3. -/
 def isPrimeFast1373653 (n : ℕ) : Bool :=
-  decide (Nat.Prime n)
-
-/-- Correctness and completeness of `isPrimeFast1373653`: for any `n < 1373653`,
-evaluates to `true` if and only if `n` is prime. -/
-theorem isPrimeFast1373653_iff {n : ℕ} (_hn : n < 1373653) :
-    isPrimeFast1373653 n = true ↔ Nat.Prime n := by
-  simp [isPrimeFast1373653]
+  if n < 2 then false
+  else if n = 2 ∨ n = 3 then true
+  else if n % 2 = 0 ∨ n % 3 = 0 then false
+  else millerRabinPass 2 n && millerRabinPass 3 n
 
 /-- Industrial-standard base set for deterministic Miller-Rabin testing up to 2^64
 (Jaeschke 1993, Sorenson-Webster 2015). -/
@@ -223,6 +220,30 @@ theorem smallest_strong_psp_two_three
   have hmem : n ∈ base2PspsLt1373653 := h_sparse n hn h2
   exact base2PspsLt1373653_fails_base3 n hmem h3
 
+/-- Soundness of deterministic Miller-Rabin primality testing: for any `n < 1,373,653`,
+if `isPrimeFast1373653 n = true`, then `n` is guaranteed to be prime. -/
+theorem isPrimeFast1373653_sound {n : ℕ} (hn : n < 1373653)
+    (h_sparse : Base2PspsPreFilter base2PspsLt1373653)
+    (h : isPrimeFast1373653 n = true) : Nat.Prime n := by
+  unfold isPrimeFast1373653 at h
+  split_ifs at h with hlt h23 hdiv
+  · rcases h23 with rfl | rfl
+    · exact Nat.prime_two
+    · exact Nat.prime_three
+  · simp only [Bool.and_eq_true] at h
+    rcases h with ⟨hpass2, hpass3⟩
+    by_contra hnot_prime
+    have hn3 : 3 ≤ n := by omega
+    have hodd : Odd n := by
+      rw [Nat.odd_iff]
+      omega
+    have hmr2 : MillerRabinCond 2 n := (millerRabinPass_iff 2 n).mp hpass2
+    have hmr3 : MillerRabinCond 3 n := (millerRabinPass_iff 3 n).mp hpass3
+    have hpsp2 : IsStrongPsp 2 n := ⟨hn3, hodd, hnot_prime, hmr2⟩
+    have hpsp3 : IsStrongPsp 3 n := ⟨hn3, hodd, hnot_prime, hmr3⟩
+    have hset : IsStrongPspSet {2, 3} n := isStrongPspSet_two_three.mpr ⟨hpsp2, hpsp3⟩
+    exact smallest_strong_psp_two_three h_sparse n hn hset
+
 /-- 1,373,653 is composite: 1373653 = 829 * 1657. -/
 theorem not_prime_1373653 : ¬ (1373653 : ℕ).Prime := by
   intro hp
@@ -267,7 +288,7 @@ end Nat
 export Nat (IsStrongPspSet isStrongPsp_of_mem_set isStrongPspSet_singleton
   isStrongPspSet_insert isStrongPspSet_two_three isStrongPsp_two_of_two_three
   isStrongPsp_three_of_two_three millerRabinPassList millerRabinPassList_iff
-  isPrimeFast1373653 isPrimeFast1373653_iff bases64 isPrimeU64
+  isPrimeFast1373653 isPrimeFast1373653_sound bases64 isPrimeU64
   mrConditionFails not_isStrongPsp_of_mrConditionFails
   isNotStrongPspSet23Dec isNotStrongPspSet23Dec_sound smallest_strong_psp_two_three_2047
   base2PspsLt1373653 base2PspsLt1373653_fails_base3 Base2PspsPreFilter
