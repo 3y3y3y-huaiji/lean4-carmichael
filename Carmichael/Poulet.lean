@@ -3,6 +3,7 @@ Copyright (c) 2026 Su MingKai. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Su MingKai
 -/
+import Carmichael.Korselt
 import Carmichael.Smallest
 import Mathlib.NumberTheory.FermatPsp
 
@@ -71,16 +72,27 @@ theorem isPoulet_of_isCarmichael {n : ℕ} (h : IsCarmichael n) : IsPoulet n := 
   have hmod := (probablePrime_iff_modEq n (by decide)).mp hpp
   exact ⟨hcomp, by omega, hmod⟩
 
+/-- Equivalence between `Nat.IsCarmichael` and `Nat.Carmichael`. -/
+theorem isCarmichael_iff_carmichael {n : ℕ} : n.IsCarmichael ↔ Nat.Carmichael n := by
+  constructor
+  · rintro ⟨hn, hp, hpp⟩
+    exact ⟨hp, by omega, hpp⟩
+  · rintro ⟨hp, hn, hpp⟩
+    refine ⟨?_, hp, hpp⟩
+    by_contra! hle
+    interval_cases n
+    exact hp Nat.prime_two
+
 /-- Any Carmichael number (formulation for `Nat.Carmichael`) is a Poulet number. -/
 theorem isPoulet_of_carmichael {n : ℕ} (h : Nat.Carmichael n) : IsPoulet n :=
   isPoulet_of_isCarmichael (isCarmichael_iff_carmichael.mpr h)
 
 /-- Fast computable boolean decider checking whether `n` is certified NOT a Poulet number.
-For numbers below 341, every candidate is either `< 2`, prime (verified via `isPrimeDec`),
+For numbers below 341, every candidate is either `< 2`, prime (verified via `decide (n.Prime)`),
 or fails Fermat's congruence `2^(n-1) ≡ 1 [MOD n]`. -/
 def isNotPouletDec (n : ℕ) : Bool :=
   if n < 2 then true
-  else if isPrimeDec n then true
+  else if decide (n.Prime) then true
   else decide (2 ^ (n - 1) % n ≠ 1)
 
 /-- Full verification decider that checks all natural numbers strictly below `N`
@@ -90,15 +102,13 @@ def checkPouletBound (N : ℕ) : Bool :=
 
 /-- Soundness of `isNotPouletDec`: if `isNotPouletDec n = true` for `n < 341`,
 then `n` is not a Poulet number. -/
-theorem not_isPoulet_of_dec {n : ℕ} (hn341 : n < 341) (hdec : isNotPouletDec n = true) :
+theorem not_isPoulet_of_dec {n : ℕ} (_hn341 : n < 341) (hdec : isNotPouletDec n = true) :
     ¬ IsPoulet n := by
-  intro ⟨hcomp, h2le, hmod⟩
+  intro ⟨hcomp, _, hmod⟩
   unfold isNotPouletDec at hdec
   split_ifs at hdec with hlt hp
   · omega
-  · have hn561 : n < 561 := by omega
-    have hprime : n.Prime := (isPrimeDec_iff hn561).mp hp
-    exact hcomp hprime
+  · exact hcomp (of_decide_eq_true hp)
   · simp only [decide_eq_true_iff] at hdec
     have hmodeq : 2 ^ (n - 1) % n = 1 % n := hmod
     have h1mod : 1 % n = 1 := Nat.mod_eq_of_lt (by omega)
