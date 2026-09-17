@@ -20,28 +20,24 @@ formatted according to Mathlib PR conventions.
 - **Stage 4**: `Carmichael.StrongPspMulti`
   - Target: `Mathlib.NumberTheory.StrongPsp`
   - Milestone: Multi-base PSW {2, 3} & deterministic primality test
+- **Community Grand Challenges**: See [COMMUNITY_CHALLENGES.md](COMMUNITY_CHALLENGES.md)
+  - Milestone A: Verified tabulation of Carmichael numbers below 10,000 (Commelin's challenge)
+  - Milestone B: Kernel-computable Verified Sieve of Eratosthenes (Pernegger/Stoll's challenge)
 
 ---
 
 ## Stage 1: Carmichael Numbers, Korselt's Criterion & 561 Minimality
 
-### Upstream Branch
-`upstream/carmichael-korselt-561`
+**Status: DRAFT PR OPEN** ([#43890](https://github.com/leanprover-community/mathlib4/pull/43890))
+- Upstream Target: `Mathlib/NumberTheory/CarmichaelNumber.lean`
+- Branch: `carmichael-561-minimality`
+- PR Title: `feat(NumberTheory/CarmichaelNumber): prove 561 is the minimal Carmichael number`
+- Method: 76-line self-contained Boolean certificate & reflection, 0.8s runtime, 0 external axioms.
 
-### Target Files
-- `Mathlib/NumberTheory/Carmichael.lean`
-- `Mathlib/NumberTheory/Carmichael/Korselt.lean`
-- `Mathlib/NumberTheory/Carmichael/Smallest.lean`
-
-### PR Title
+### Active PR
 ```text
-feat(NumberTheory/Carmichael): formalize Korselt criterion and 561 minimality
+https://github.com/leanprover-community/mathlib4/pull/43890
 ```
-
-### PR Description
-```markdown
-Addresses the open TODO in `Mathlib.NumberTheory.CarmichaelNumber`:
-"Prove (in a computationally efficient manner) that there are no Carmichael numbers less than 561."
 
 ### Mathematical Changes
 - Define `Nat.Korselt (n : ℕ) : Prop` characterizing squarefree integers whose prime divisors
