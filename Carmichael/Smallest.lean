@@ -47,7 +47,7 @@ theorem not_isCarmichael_of_dec {n : ℕ} (h : isNotCarmichael n = true) : ¬ n.
     omega
   · rw [List.any_eq_true] at hk
     rcases hk with ⟨p, hp_mem, hcond⟩
-    have hkorselt := ((isCarmichael_iff_korselt n).mp hc).2.2.2
+    have hkorselt := isCarmichael_iff_korselt.mp hc |>.2.2.2
     split_ifs at hcond with hdvd
     have hp_dvd : p ∣ n := Nat.dvd_of_mod_eq_zero (beq_iff_eq.mp hdvd)
     simp only [Bool.or_eq_true, decide_eq_true_iff, Bool.and_eq_true] at hcond
