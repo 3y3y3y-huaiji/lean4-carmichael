@@ -21,5 +21,5 @@ Write-Host " [>] 正在通过 Lean 4 执行全量严格计算与纳秒级基准�
 lake env lean --run $leanFile
 
 Write-Host "`n  ==========================================================================" -ForegroundColor Green
-Write-Host "   ★ 严格基准测试测量完成！" -ForegroundColor Green
-Write-Host "  ==========================================================================`n" -ForegroundColor Green
+Write-Host "   * 严格基准测试测量完成!" -ForegroundColor Green
+Write-Host "  ==========================================================================" -ForegroundColor Green
