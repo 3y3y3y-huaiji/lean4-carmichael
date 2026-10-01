@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Su MingKai
 -/
 import Carmichael.Korselt
+import Carmichael.Tactic
 import Carmichael.Smallest
 import Carmichael.Poulet
 import Carmichael.StrongPsp
@@ -18,6 +19,7 @@ and deterministic primality testing in Lean 4 with Mathlib4.
 ## Submodules
 
 - `Carmichael.Korselt`: Korselt's criterion (1899) with out-of-the-box computation and equivalence.
+- `Carmichael.Tactic`: Automated Korselt certification tactic (`carmichael`) for Lean 4.
 - `Carmichael.Smallest`: Proof that 561 is the strictly smallest Carmichael number
   (resolving Mathlib TODO).
 - `Carmichael.Poulet`: 341 is the strictly smallest Poulet number (base-2 Fermat pseudoprime).

@@ -172,7 +172,7 @@ theorem isNotStrongPspSet23Dec_sound {n : ℕ} (h : isNotStrongPspSet23Dec n = t
   · exact not_isStrongPsp_of_lt_three hlt h2
   · have hodd := h2.2.1
     rw [Nat.odd_iff] at hodd
-    omega
+    grind
   · exact smallest_strong_psp_two n hlt2047 h2
   · simp only [Bool.or_eq_true] at h
     rcases h with hfail2 | hfail3
@@ -233,10 +233,10 @@ theorem isPrimeFast1373653_sound {n : ℕ} (hn : n < 1373653)
   · simp only [Bool.and_eq_true] at h
     rcases h with ⟨hpass2, hpass3⟩
     by_contra hnot_prime
-    have hn3 : 3 ≤ n := by omega
+    have hn3 : 3 ≤ n := by grind
     have hodd : Odd n := by
       rw [Nat.odd_iff]
-      omega
+      grind
     have hmr2 : MillerRabinCond 2 n := (millerRabinPass_iff 2 n).mp hpass2
     have hmr3 : MillerRabinCond 3 n := (millerRabinPass_iff 3 n).mp hpass3
     have hpsp2 : IsStrongPsp 2 n := ⟨hn3, hodd, hnot_prime, hmr2⟩

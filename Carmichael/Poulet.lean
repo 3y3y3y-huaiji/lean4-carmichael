@@ -48,11 +48,11 @@ def IsPoulet (n : ℕ) : Prop :=
 theorem isPoulet_iff_fermatPsp {n : ℕ} : IsPoulet n ↔ Nat.FermatPsp n 2 := by
   constructor
   · rintro ⟨hp, h2, hmod⟩
-    refine ⟨?_, hp, by omega⟩
+    refine ⟨?_, hp, by grind⟩
     exact (probablePrime_iff_modEq n (by decide)).mpr hmod
   · rintro ⟨hpp, hp, h1⟩
     have hmod := (probablePrime_iff_modEq n (by decide)).mp hpp
-    exact ⟨hp, by omega, hmod⟩
+    exact ⟨hp, by grind, hmod⟩
 
 /-- Any odd natural number is coprime to 2. -/
 theorem coprime_two_of_odd {n : ℕ} (h : Odd n) : Nat.Coprime 2 n := by
@@ -60,7 +60,7 @@ theorem coprime_two_of_odd {n : ℕ} (h : Odd n) : Nat.Coprime 2 n := by
   intro hdvd
   have hmod : n % 2 = 0 := Nat.mod_eq_zero_of_dvd hdvd
   rw [Nat.odd_iff] at h
-  omega
+  grind
 
 /-- Any Carmichael number is a Poulet number (base 2 Fermat pseudoprime). -/
 theorem isPoulet_of_isCarmichael {n : ℕ} (h : IsCarmichael n) : IsPoulet n := by
@@ -70,13 +70,13 @@ theorem isPoulet_of_isCarmichael {n : ℕ} (h : IsCarmichael n) : IsPoulet n := 
   have hcop : Nat.Coprime 2 n := coprime_two_of_odd hodd
   have hpp : ProbablePrime n 2 := h.2.2 2 hcop
   have hmod := (probablePrime_iff_modEq n (by decide)).mp hpp
-  exact ⟨hcomp, by omega, hmod⟩
+  exact ⟨hcomp, by grind, hmod⟩
 
 /-- Equivalence between `Nat.IsCarmichael` and `Nat.Carmichael`. -/
 theorem isCarmichael_iff_carmichael {n : ℕ} : n.IsCarmichael ↔ Nat.Carmichael n := by
   constructor
   · rintro ⟨hn, hp, hpp⟩
-    exact ⟨hp, by omega, hpp⟩
+    exact ⟨hp, by grind, hpp⟩
   · rintro ⟨hp, hn, hpp⟩
     refine ⟨?_, hp, hpp⟩
     by_contra! hle
@@ -107,11 +107,11 @@ theorem not_isPoulet_of_dec {n : ℕ} (_hn341 : n < 341) (hdec : isNotPouletDec 
   intro ⟨hcomp, _, hmod⟩
   unfold isNotPouletDec at hdec
   split_ifs at hdec with hlt hp
-  · omega
+  · grind
   · exact hcomp (of_decide_eq_true hp)
   · simp only [decide_eq_true_iff] at hdec
     have hmodeq : 2 ^ (n - 1) % n = 1 % n := hmod
-    have h1mod : 1 % n = 1 := Nat.mod_eq_of_lt (by omega)
+    have h1mod : 1 % n = 1 := Nat.mod_eq_of_lt (by grind)
     rw [h1mod] at hmodeq
     exact hdec hmodeq
 
@@ -122,7 +122,7 @@ theorem checkPouletBound_sound {N : ℕ} (hN : N ≤ 341) (h : checkPouletBound 
   intro n hn
   unfold checkPouletBound at h
   rw [List.all_eq_true] at h
-  have hn341 : n < 341 := by omega
+  have hn341 : n < 341 := by grind
   have hmem : n ∈ List.range N := List.mem_range.mpr hn
   exact not_isPoulet_of_dec hn341 (h n hmem)
 
@@ -138,7 +138,7 @@ theorem fermatPsp_two_341 : Nat.FermatPsp 341 2 :=
 /-- There are no Poulet numbers strictly less than 341. -/
 theorem not_isPoulet_of_lt_341 {n : ℕ} (hn : n < 341) : ¬ IsPoulet n := by
   have h_dec : checkPouletBound 341 = true := by decide
-  exact checkPouletBound_sound (by omega) h_dec n hn
+  exact checkPouletBound_sound (by grind) h_dec n hn
 
 /-- There are no Fermat pseudoprimes to base 2 strictly less than 341. -/
 theorem not_fermatPsp_two_of_lt_341 {n : ℕ} (hn : n < 341) : ¬ Nat.FermatPsp n 2 := by

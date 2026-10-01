@@ -5,6 +5,7 @@ Authors: Su MingKai
 -/
 import Mathlib.NumberTheory.CarmichaelNumber
 import Mathlib.Tactic.Linarith
+import Carmichael.Tactic
 
 /-!
 # 561 is the Smallest Carmichael Number
@@ -13,8 +14,7 @@ This module proves that 561 is the strictly smallest Carmichael number, resolvin
 the open TODO in Mathlib's `Mathlib.NumberTheory.CarmichaelNumber`.
 
 The proof implements an extensible modular funnel reflection architecture:
-`Bitwise Parity Gate → Small Prime Trial Division (≤ 23) → Base-2/3 Fermat Witness Early Exit`.
-Every candidate below 561 is refuted without Peano primality recursion.
+`Bitwise Parity Gate → Small Prime Trial Division (≤ 23) → Dual-Base Fermat Gate (Bases 2 & 3)`.
 -/
 
 namespace Nat
@@ -25,87 +25,69 @@ def isEvenOrSmall (n : ℕ) : Bool :=
 
 lemma not_isEvenOrSmall_of_isCarmichael {n : ℕ} (hc : n.IsCarmichael) :
     isEvenOrSmall n = false := by
-  rw [Bool.eq_false_iff]
-  intro h
-  unfold isEvenOrSmall at h
-  simp only [Bool.or_eq_true, decide_eq_true_iff, beq_iff_eq] at h
-  have := hc.two_lt
-  obtain ⟨k, rfl⟩ := hc.odd
-  rcases h with hle | heven <;> lia
+  obtain ⟨k, rfl⟩ := hc.odd; have := hc.two_lt; simp [isEvenOrSmall]; grind
 
-/-- Trial division gate: checks if `n` has no divisors `d` in `2 ≤ d < 24` with `d * d ≤ n`. -/
-def isPrimeTrial (n : ℕ) : Bool :=
-  (List.range' 2 22).all (fun d => decide (n < d * d) || n % d != 0)
+/-- Bounded trial division gate: checks if `n` has no divisors `d` in `2 ≤ d < bound`
+with `d * d ≤ n`. -/
+def isPrimeTrial (bound : ℕ) (n : ℕ) : Bool :=
+  (List.range' 2 (bound - 2)).all (fun d => decide (n < d * d) || n % d != 0)
 
-lemma not_isPrimeTrial_of_isCarmichael {n : ℕ} (hn : n < 561) (hc : n.IsCarmichael) :
-    isPrimeTrial n = false := by
-  rw [Bool.eq_false_iff]
-  intro hall
-  unfold isPrimeTrial at hall
-  have h_sqle := minFac_sq_le_self (by have := hc.two_lt; lia) hc.not_prime
-  have h_mf_lt : minFac n < 24 := by
-    by_contra! h24
-    have : 24 ^ 2 ≤ minFac n ^ 2 := by nlinarith
-    lia
-  have hp : 2 ≤ minFac n := (minFac_prime (by have := hc.two_lt; lia)).two_le
-  have hd_mem : minFac n ∈ List.range' 2 22 := by
-    rw [List.mem_range']
-    refine ⟨minFac n - 2, by lia, by lia⟩
-  have hall_dvd := List.all_eq_true.mp hall (minFac n) hd_mem
-  simp only [Bool.or_eq_true, decide_eq_true_iff, bne_iff_ne, ne_eq] at hall_dvd
-  rcases hall_dvd with hgt | hdvd
-  · lia
-  · exact hdvd (Nat.mod_eq_zero_of_dvd (minFac_dvd n))
+lemma not_isPrimeTrial_of_isCarmichael {bound n : ℕ} (hn : n < bound ^ 2) (hc : n.IsCarmichael) :
+    isPrimeTrial bound n = false := by
+  rw [Bool.eq_false_iff]; intro hall
+  have hp : 2 ≤ minFac n := (minFac_prime (by grind [hc.two_lt])).two_le
+  have h_sq := minFac_sq_le_self (by grind [hc.two_lt]) hc.not_prime
+  have h_lt : minFac n < bound := by
+    by_contra! hge
+    have : bound ^ 2 ≤ minFac n ^ 2 := by nlinarith
+    nlinarith
+  have hmem : minFac n ∈ List.range' 2 (bound - 2) :=
+    List.mem_range'.mpr ⟨minFac n - 2, by omega, by omega⟩
+  have hdvd := List.all_eq_true.mp hall _ hmem
+  simp only [Bool.or_eq_true, decide_eq_true_iff, bne_iff_ne, ne_eq] at hdvd
+  rcases hdvd with hlt | hndvd <;> [nlinarith; exact hndvd (Nat.mod_eq_zero_of_dvd (minFac_dvd n))]
 
-/-- Fermat witness early-exit gate: checks if base 2 (or base 3 for 341) refutes primality. -/
-def isFermatWitness (n : ℕ) : Bool :=
-  if n == 341 then !decide (ProbablePrime 341 3)
-  else !decide (ProbablePrime n 2)
+/-- A list of candidate bases witnesses that `n` is not a Carmichael number
+if for some base `b ∈ bases` coprime to `n`, `n` fails the Fermat test. -/
+def hasFermatWitness (n : ℕ) (bases : List ℕ := [2, 3]) : Bool :=
+  bases.any fun b => decide (b.Coprime n) && !decide (ProbablePrime n b)
 
-lemma not_isFermatWitness_of_isCarmichael {n : ℕ} (hc : n.IsCarmichael) :
-    isFermatWitness n = false := by
-  unfold isFermatWitness
-  split_ifs with h341
-  · have hn341 : n = 341 := beq_iff_eq.mp h341
-    subst hn341
-    simp [hc.probablePrime_of_coprime (by decide : Nat.Coprime 3 341)]
-  · simp [hc.probablePrime_of_coprime (Nat.coprime_two_left.mpr hc.odd)]
+lemma not_hasFermatWitness_of_isCarmichael {n : ℕ} (bases : List ℕ) (hc : n.IsCarmichael) :
+    hasFermatWitness n bases = false := by
+  simp [hasFermatWitness, List.any_eq_false]
+  intro b _ hb
+  simp [hc.probablePrime_of_coprime hb]
 
-/-- Modular funnel filter for candidate Carmichael numbers below 561. -/
-def isCarmichaelCandidate (n : ℕ) : Bool :=
+/-- Composite candidate decider combining all filter stages. -/
+def isCarmichaelCandidate (n : ℕ) (bound : ℕ := 24) (bases : List ℕ := [2, 3]) : Bool :=
   if isEvenOrSmall n then false
-  else if isPrimeTrial n then false
-  else !isFermatWitness n
+  else if isPrimeTrial bound n then false
+  else !hasFermatWitness n bases
 
-theorem isCarmichaelCandidate_of_isCarmichael {n : ℕ} (hn : n < 561) (hc : n.IsCarmichael) :
-    isCarmichaelCandidate n = true := by
-  unfold isCarmichaelCandidate
-  simp [not_isEvenOrSmall_of_isCarmichael hc, not_isPrimeTrial_of_isCarmichael hn hc,
-    not_isFermatWitness_of_isCarmichael hc]
+theorem isCarmichaelCandidate_of_isCarmichael {bound n : ℕ}
+    (hn : n < bound ^ 2) (hc : n.IsCarmichael) :
+    isCarmichaelCandidate n bound [2, 3] = true := by
+  simp [isCarmichaelCandidate, not_isEvenOrSmall_of_isCarmichael hc,
+    not_isPrimeTrial_of_isCarmichael hn hc, not_hasFermatWitness_of_isCarmichael [2, 3] hc]
+/-- Exhaustive verifier ensuring no candidates exist below `N`. -/
+def checkCarmichaelBound (N : ℕ) (bound : ℕ := 24) (bases : List ℕ := [2, 3]) : Bool :=
+  (List.range N).all (fun n => !isCarmichaelCandidate n bound bases)
 
-set_option exponentiation.threshold 1000
-set_option maxRecDepth 10000
-
-/-- Bounded verifier checking that no natural number below N is Carmichael. -/
-def checkCarmichaelBound (N : ℕ) : Bool :=
-  (List.range N).all (fun n => !isCarmichaelCandidate n)
-
-theorem checkCarmichaelBound_sound {N : ℕ} (hN : N ≤ 561) (h : checkCarmichaelBound N = true) :
-    ∀ n < N, ¬ n.IsCarmichael := by
-  intro n hn
-  have hn_lt : n < 561 := by lia
-  unfold checkCarmichaelBound at h
-  have hall := List.all_eq_true.mp h n (List.mem_range.mpr hn)
-  simp only [Bool.not_eq_true'] at hall
-  intro hc
-  have hcand := isCarmichaelCandidate_of_isCarmichael hn_lt hc
-  rw [hall] at hcand
-  contradiction
+theorem checkCarmichaelBound_sound {N bound : ℕ} (hN : N ≤ bound ^ 2)
+    (h : checkCarmichaelBound N bound [2, 3] = true) :
+    ∀ n < N, ¬ n.IsCarmichael := fun n hn hc => by
+  simpa [isCarmichaelCandidate_of_isCarmichael (by nlinarith) hc] using
+    List.all_eq_true.mp h n (List.mem_range.mpr hn)
 
 theorem not_isCarmichael_of_lt_561 {n : ℕ} (hn : n < 561) : ¬ n.IsCarmichael :=
-  checkCarmichaelBound_sound (le_refl 561) (by decide) n hn
+  checkCarmichaelBound_sound (bound := 24) (by decide) (by decide +kernel) n hn
 
+/-- 561 is the smallest Carmichael number. -/
 theorem isCarmichael_min {n : ℕ} (hn : n.IsCarmichael) : 561 ≤ n :=
-  not_lt.mp (fun h => not_isCarmichael_of_lt_561 h hn)
+  not_lt.mp (not_isCarmichael_of_lt_561 · hn)
+
+/-- 561 is a Carmichael number certified via the Korselt reflection tactic. -/
+theorem isCarmichael_561 : (561 : ℕ).IsCarmichael := by
+  carmichael
 
 end Nat

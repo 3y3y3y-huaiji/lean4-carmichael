@@ -74,18 +74,18 @@ def twoPowerPart (n : ℕ) : ℕ := (splitTwo (n - 1)).2
 lemma splitTwoAux_spec : ∀ (fuel m : ℕ), m ≤ fuel →
     (splitTwoAux fuel m).1 * 2 ^ (splitTwoAux fuel m).2 = m
 | 0, 0, _ => by simp [splitTwoAux]
-| 0, m + 1, h => by omega
+| 0, m + 1, h => by grind
 | fuel + 1, m, h => by
   rw [splitTwoAux]
   split_ifs with h0 heven
   · subst h0
     simp
-  · have hdiv_le : m / 2 ≤ fuel := by omega
+  · have hdiv_le : m / 2 ≤ fuel := by grind
     have ih := splitTwoAux_spec fuel (m / 2) hdiv_le
     dsimp only
     rw [pow_succ', ← mul_assoc, mul_right_comm, ih]
     have hmod := Nat.div_add_mod m 2
-    omega
+    grind
   · simp
 
 lemma splitTwo_spec (m : ℕ) : (splitTwo m).1 * 2 ^ (splitTwo m).2 = m :=
@@ -100,19 +100,19 @@ theorem oddPart_mul_twoPowerPart (n : ℕ) :
 lemma splitTwoAux_odd : ∀ (fuel m : ℕ), m ≤ fuel → m ≠ 0 →
     (splitTwoAux fuel m).1 % 2 ≠ 0
 | 0, 0, _, hne => by contradiction
-| 0, _ + 1, hle, _ => by omega
+| 0, _ + 1, hle, _ => by grind
 | fuel + 1, m, hle, hne => by
   rw [splitTwoAux]
   split_ifs with h0 heven
   · contradiction
-  · have hdiv_le : m / 2 ≤ fuel := by omega
-    have hdiv_ne : m / 2 ≠ 0 := by omega
+  · have hdiv_le : m / 2 ≤ fuel := by grind
+    have hdiv_ne : m / 2 ≠ 0 := by grind
     exact splitTwoAux_odd fuel (m / 2) hdiv_le hdiv_ne
   · exact heven
 
 /-- For any `n ≥ 2`, `oddPart n` is odd. -/
 theorem odd_oddPart {n : ℕ} (hn : 2 ≤ n) : Odd (oddPart n) := by
-  have hm : n - 1 ≠ 0 := by omega
+  have hm : n - 1 ≠ 0 := by grind
   have hmod := splitTwoAux_odd (n - 1) (n - 1) (le_refl (n - 1)) hm
   rw [Nat.odd_iff]
   have h1 : oddPart n = (splitTwoAux (n - 1) (n - 1)).1 := rfl
@@ -157,13 +157,13 @@ theorem isStrongPspDec_iff (b n : ℕ) :
 
 lemma not_isStrongPsp_of_lt_three {b n : ℕ} (h : n < 3) : ¬ IsStrongPsp b n := by
   intro ⟨h3, _⟩
-  omega
+  grind
 
 lemma not_isStrongPsp_of_even {b n : ℕ} (h : Even n) : ¬ IsStrongPsp b n := by
   intro ⟨_, hodd, _⟩
   rw [Nat.odd_iff] at hodd
   rw [Nat.even_iff] at h
-  omega
+  grind
 
 lemma not_isStrongPsp_of_prime {b n : ℕ} (h : n.Prime) : ¬ IsStrongPsp b n := by
   intro hpsp
@@ -173,8 +173,8 @@ lemma not_isStrongPsp_of_prime {b n : ℕ} (h : n.Prime) : ¬ IsStrongPsp b n :=
 lemma modeq_sub_one_sq {n : ℕ} (hn : 2 ≤ n) : (n - 1) ^ 2 ≡ 1 [MOD n] := by
   have hid : (n - 1) ^ 2 = n * (n - 2) + 1 := by
     apply Nat.cast_injective (R := ℤ)
-    rw [Nat.cast_pow, Nat.cast_sub (by omega : 1 ≤ n)]
-    rw [Nat.cast_add, Nat.cast_mul, Nat.cast_sub (by omega : 2 ≤ n)]
+    rw [Nat.cast_pow, Nat.cast_sub (by grind : 1 ≤ n)]
+    rw [Nat.cast_add, Nat.cast_mul, Nat.cast_sub (by grind : 2 ≤ n)]
     push_cast
     ring
   rw [Nat.ModEq, hid, Nat.add_mod, Nat.mul_mod_right, zero_add, Nat.mod_mod]
@@ -195,7 +195,7 @@ lemma pow_two_pow_modeq_one {b d r s n : ℕ} (hn : 2 ≤ n) (hrs : r < s)
   have hd_s : d * 2 ^ s = (d * 2 ^ (r + 1)) * 2 ^ (s - (r + 1)) := by
     rw [mul_assoc, ← pow_add]
     congr 2
-    omega
+    grind
   rw [hd_s, pow_mul]
   have hpow_one := hstep.pow (2 ^ (s - (r + 1)))
   rw [one_pow] at hpow_one
@@ -205,7 +205,7 @@ lemma pow_two_pow_modeq_one {b d r s n : ℕ} (hn : 2 ≤ n) (hrs : r < s)
 theorem isPoulet_of_isStrongPsp_two {n : ℕ} (h : IsStrongPsp 2 n) : IsPoulet n := by
   have h3 : 3 ≤ n := h.1
   have hcomp : ¬ n.Prime := h.2.2.1
-  have h2n : 2 ≤ n := by omega
+  have h2n : 2 ≤ n := by grind
   refine ⟨hcomp, h2n, ?_⟩
   have hmr := h.2.2.2
   have hdecomp : 2 ^ (n - 1) = 2 ^ (oddPart n * 2 ^ twoPowerPart n) := by
@@ -240,8 +240,8 @@ theorem isPrimeDec2047_prime {n : ℕ} (hn : n < 2047) (h : isPrimeDec2047 n = t
   · subst h2
     exact Nat.prime_two
   · by_contra hnp
-    have h2le : 2 ≤ n := by omega
-    have hp_prime : (Nat.minFac n).Prime := Nat.minFac_prime (by omega)
+    have h2le : 2 ≤ n := by grind
+    have hp_prime : (Nat.minFac n).Prime := Nat.minFac_prime (by grind)
     have hp_dvd : Nat.minFac n ∣ n := Nat.minFac_dvd n
     have hp_ne2 : Nat.minFac n ≠ 2 := by
       intro hp2
@@ -250,14 +250,14 @@ theorem isPrimeDec2047_prime {n : ℕ} (hn : n < 2047) (h : isPrimeDec2047 n = t
       contradiction
     have hp_ge3 : 3 ≤ Nat.minFac n := by
       have := hp_prime.two_le
-      omega
+      grind
     have hp_lt : Nat.minFac n < n := (Nat.not_prime_iff_minFac_lt h2le).mp hnp
     have hdiv_ge2 : 2 ≤ n / Nat.minFac n := by
       have hmul : n = Nat.minFac n * (n / Nat.minFac n) := (Nat.mul_div_cancel' hp_dvd).symm
       by_contra! hlt
       interval_cases (n / Nat.minFac n)
-      · omega
-      · omega
+      · grind
+      · grind
     have hq : Nat.minFac n ≤ n / Nat.minFac n :=
       Nat.minFac_le_of_dvd hdiv_ge2 (Nat.div_dvd_of_dvd hp_dvd)
     have h_mul_div : Nat.minFac n * (n / Nat.minFac n) = n := Nat.mul_div_cancel' hp_dvd
@@ -271,14 +271,14 @@ theorem isPrimeDec2047_prime {n : ℕ} (hn : n < 2047) (h : isPrimeDec2047 n = t
         by_contra! hlt
         interval_cases Nat.minFac n <;> revert hp_prime <;> decide
       have h2209 : 47 * 47 ≤ Nat.minFac n * Nat.minFac n := Nat.mul_le_mul hp47 hp47
-      omega
+      grind
     have hp_mem : Nat.minFac n ∈ testPrimes2047 :=
       prime_le_43_mem_testPrimes hp_prime hp_ge3 hp_le_43
     rw [List.all_eq_true] at h
     have hspec := h (Nat.minFac n) hp_mem
     simp only [Bool.or_eq_true, decide_eq_true_iff] at hspec
     rcases hspec with hge | hne
-    · omega
+    · grind
     · rw [Nat.dvd_iff_mod_eq_zero] at hp_dvd
       exact hne hp_dvd
 
@@ -290,12 +290,12 @@ theorem isPrimeDec2047_iff {n : ℕ} (hn : n < 2047) :
     unfold isPrimeDec2047
     split_ifs with hlt h2 heven
     · have := hp.two_le
-      omega
+      grind
     · rfl
     · have ho := hp.eq_two_or_odd
       rcases ho with rfl | ho
-      · omega
-      · omega
+      · grind
+      · grind
     · rw [List.all_eq_true]
       intro p hp_mem
       simp only [Bool.or_eq_true, decide_eq_true_iff]
@@ -307,9 +307,9 @@ theorem isPrimeDec2047_iff {n : ℕ} (hn : n < 2047) :
         rcases heq with rfl | rfl
         · revert hp_mem
           decide
-        · omega
+        · grind
       · left
-        omega
+        grind
 
 /-- Computable decider certifying that `n` is NOT a strong pseudoprime to base 2.
 Returns `true` if `n < 3`, `n` is even, or `n` is detected prime.
@@ -333,16 +333,16 @@ theorem isNotStrongPspDec2_sound {n : ℕ} (h : isNotStrongPspDec2 n = true) :
   intro ⟨h3, hodd, hcomp, hmr⟩
   unfold isNotStrongPspDec2 at h
   split_ifs at h with hlt heven hlt2047 hp
-  · omega
+  · grind
   · rw [Nat.odd_iff] at hodd
-    omega
+    grind
   · have hprime : n.Prime := (isPrimeDec2047_iff hlt2047).mp hp
     exact hcomp hprime
   · simp only [Bool.and_eq_true, decide_eq_true_iff, List.all_eq_true, List.mem_range] at h
     rcases h with ⟨hd_ne, hall⟩
     rcases hmr with h1 | ⟨r, hr_lt, hr_eq⟩
     · have h1mod : 2 ^ oddPart n % n = 1 % n := h1
-      have h1n : 1 % n = 1 := Nat.mod_eq_of_lt (by omega)
+      have h1n : 1 % n = 1 := Nat.mod_eq_of_lt (by grind)
       rw [h1n] at h1mod
       exact hd_ne h1mod
     · have hspec := hall r hr_lt

@@ -81,9 +81,9 @@ open ArithmeticFunction
 
 namespace Nat
 
-/-- A natural number 
+/-- A natural number
  is a Carmichael number if it is composite, greater than 1,
-and passes the Fermat primality test for all bases  coprime to 
+and passes the Fermat primality test for all bases  coprime to
 . -/
 def Carmichael (n : ℕ) : Prop :=
   ¬ n.Prime ∧ 1 < n ∧ ∀ b : ℕ, b.Coprime n → ProbablePrime n b
@@ -111,15 +111,15 @@ for base 2 (gcd(2, 9) = 1 but 9 ∤ 2^8 - 1). -/
 theorem not_carmichael_nine : ¬ Carmichael 9 := fun h ↦
   (by decide : ¬ (9 ∣ 2 ^ (9 - 1) - 1)) (h.probablePrime (by decide : Nat.Coprime 2 9))
 
-/-- **Korselt Condition (1899)**: A natural number 
+/-- **Korselt Condition (1899)**: A natural number
  satisfies Korselt's condition if
 it is square-free and p - 1 ∣ n - 1 for every prime divisor p ∣ n. -/
 def Korselt (n : ℕ) : Prop :=
   Squarefree n ∧ ∀ p : ℕ, p.Prime → p ∣ n → (p - 1) ∣ (n - 1)
 
-/-- **Step 1**: A composite natural number 
+/-- **Step 1**: A composite natural number
  > 1 is a Carmichael number if and only if
-the Carmichael function carmichael n divides 
+the Carmichael function carmichael n divides
  - 1. -/
 theorem carmichael_iff_carmichael_dvd (n : ℕ) (hn : 1 < n) (hcomp : ¬ n.Prime) :
     Nat.Carmichael n ↔ ArithmeticFunction.carmichael n ∣ n - 1 := by
@@ -205,8 +205,8 @@ lemma dvd_one_of_dvd_and_dvd_sub_one {p n : ℕ} (hpn : p ∣ n) (hpn1 : p ∣ n
   have hp_add : p ∣ (n - 1) + 1 := h_add.symm ▸ hpn
   exact (Nat.dvd_add_right hpn1).mp hp_add
 
-/-- **Step 2**: The Carmichael function divides 
- - 1 if and only if 
+/-- **Step 2**: The Carmichael function divides
+ - 1 if and only if
  satisfies
 Korselt's condition. -/
 theorem carmichael_dvd_iff_korselt (n : ℕ) (hn : 1 < n) :
@@ -265,10 +265,10 @@ theorem carmichael_dvd_iff_korselt (n : ℕ) (hn : 1 < n) :
     rw [h_fac, pow_one, carmichael_prime hp]
     exact h_korselt p hp hpn
 
-/-- **Korselt's Criterion (1899)**: A natural number 
+/-- **Korselt's Criterion (1899)**: A natural number
  is a Carmichael number
-if and only if 1 < n, 
- is composite, and 
+if and only if 1 < n,
+ is composite, and
  satisfies Korselt's condition. -/
 theorem carmichael_iff_korselt (n : ℕ) :
     Nat.Carmichael n ↔ 1 < n ∧ ¬ n.Prime ∧ Korselt n := by
@@ -283,7 +283,7 @@ theorem carmichael_iff_korselt (n : ℕ) :
     have hdvd := (carmichael_dvd_iff_korselt n h1).mpr hk
     exact (carmichael_iff_carmichael_dvd n h1 hp).mpr hdvd
 
-/-- Computable decider evaluating whether 
+/-- Computable decider evaluating whether
  satisfies Korselt's condition. -/
 def korseltDec (n : ℕ) : Bool :=
   if n = 0 then false

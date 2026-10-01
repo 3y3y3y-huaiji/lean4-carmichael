@@ -7,13 +7,14 @@ All Lean 4 code and GitHub contributions in this workspace **MUST** adhere to th
 
 ## 🛠️ Installed Skills Suite (Prompt Reference)
 
-The workspace is equipped with 4 production-grade formalization skills:
+The workspace is equipped with 5 production-grade formalization skills:
 
 | Skill Directory | Primary Scope | When to Activate |
 | :--- | :--- | :--- |
 | [`.agents/skills/mathlib-style-and-naming`](.agents/skills/mathlib-style-and-naming/SKILL.md) | **Formatting & Naming** | Every time you write, edit, or refactor `.lean` files. Enforces 7 capitalization rules, line length $\le 100$, 2/4-space indent, docstrings, and `#use-of-ai` compliance. |
 | [`.agents/skills/lean-proof-golfing`](.agents/skills/lean-proof-golfing/SKILL.md) | **Proof Compression & Tactics** | When proving theorems. Eliminates AI boilerplate, forbids reinventing wheels, uses tactic hierarchy (`omega`, `zify; grind`, `decide`), and achieves mathematical conciseness. |
 | [`.agents/skills/mathlib-pr-conventions`](.agents/skills/mathlib-pr-conventions/SKILL.md) | **GitHub PR & Review Standards** | When drafting commits, preparing PRs, or communicating with upstream Mathlib. Enforces conventional commit titles, minimalist descriptions, and mandatory `LLM-generated` disclosure. |
+| [`.agents/skills/de-ai-comment-purifier`](.agents/skills/de-ai-comment-purifier/SKILL.md) | **De-AI PR & Review Purifier** | When drafting PR descriptions, commit messages, responding to reviewers, or chatting on Zulip. Enforces living human pulse ("活人感"), pain-point-driven descriptions, strips AI boilerplate, sycophancy, and unsolicited benchmarking. |
 | [`.agents/skills/mathematics-in-lean`](.agents/skills/mathematics-in-lean/SKILL.md) | **Mathematical Foundations** | For deep formalizations across number theory, algebra, and analysis based on the Mathematics in Lean (MIL) curriculum. |
 
 ---
