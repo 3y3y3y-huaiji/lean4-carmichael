@@ -23,8 +23,9 @@ The workspace is equipped with 5 production-grade formalization skills:
 
 Before delivering any Lean 4 code to the user or pushing to git, the AI agent **MUST** follow this 3-step quality gate:
 
-### Step 1: Proof Golfing (No AI Spaghetti)
-- Never construct 10-line manual arithmetic chains when `omega`, `ring`, or `zify; grind` can close it in 1 line.
+### Step 1: Modern Tactics & Zero Hardcoding (No AI Spaghetti, No Hardcoding)
+- **Deprecate `omega`**: Lean 4 / Mathlib is phasing out `omega` in favor of `grind` / `linarith` / `zify; grind`. Prefer `grind`, `linarith`, or `ring`. Do not use `omega` in new formalizations.
+- **Strictly Zero Hardcoding**: Absolute ban on hardcoded magic constants, hardcoded factor tables, hardcoded candidate lists, or manual case explosions. Everything must be dynamic, parameterized, and mathematically generalized.
 - For bounded checks over finite domains ($n < N$), use **computational reflection** (`def dec ... := ...` + `by decide`) instead of branching into 500 cases.
 - Reuse Mathlib existing theorems—never redefine concepts already merged in Mathlib.
 

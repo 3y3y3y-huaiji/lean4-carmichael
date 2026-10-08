@@ -24,7 +24,7 @@ by Jeremy Avigad, Patrick Massot et al., alongside Mathlib maintainer standards.
 
 | 维度 | Mathlib 地道规范 | 严禁的 AI 废话模式 |
 | :--- | :--- | :--- |
-| **自动化** | 决策战术 (`omega`, `ring`, `norm_num`) | 10+ 行手工 `rw` 重写链 |
+| **自动化** | 决策战术 (`grind` / `linarith`, `ring`, `norm_num`) | 10+ 行手工 `rw` 重写链 |
 | **中间变量** | 管道流 / 项模式 / `obtain` 解构 | 级联 `have h1 ... have h2` |
 | **减法整除** | `zify; grind` 提升至 ℤ 求解 | 30 行自然数下溢分类讨论 |
 | **有限搜索** | `decide` 计算反射 1 行搞定 | 暴力手工枚举分支讨论 |
@@ -42,7 +42,7 @@ orm_num.
 ing (or 
 ing1).
    - Handles commutativity, associativity, distribution, expansion without manual steps.
-3. **Linear Integer/Natural Inequalities (一元线性算术与不等式)**: Use omega (or linarith).
+3. **Linear Integer/Natural Inequalities (一元线性算术与不等式)**: Use linarith / grind (omega is deprecated).
    - Automatically solves Presburger arithmetic, order transitivity, linear bounds.
 4. **Targeted Equational Rewrite (定向重写)**: Use 
 w [lemma] or 
@@ -65,13 +65,13 @@ ring
 
 `lean
 -- ❌ BAD (AI Fluff: chaining inequalities manually)
-have h1 : a <= b := by omega
-have h2 : b < c := by omega
+have h1 : a <= b := by grind
+have h2 : b < c := by grind
 have h3 : a < c := lt_of_le_of_lt h1 h2
 exact h3
 
 -- ✅ GOOD (Mathlib Idiomatic: 1 line)
-omega
+grind
 `
 
 ---
@@ -167,7 +167,7 @@ Whenever verifying a bounded universal property `∀ n < N, ¬ P n` on a finite 
 
 ### The 10 Mandates (10 必须)
 1. **Must** search Mathlib (exact?, pply?, Moogle) before writing any lemma.
-2. **Must** prefer modern decision tactics: omega for linear arithmetic, 
+2. **Must** prefer modern decision tactics: grind / linarith for arithmetic, 
 ing for polynomials.
 3. **Must** use obtain ⟨...⟩ for simultaneous destructuring.
 4. **Must** keep line lengths strictly <= 100 characters.
@@ -180,7 +180,7 @@ ing for polynomials.
 
 ### The 10 Prohibitions (10 严禁)
 1. **Never** write manual rewrite chains when 
-ing, omega, or 
+ing, linarith, or 
 orm_num applies.
 2. **Never** write cascading single-variable have chains without branch-closing tactics.
 3. **Never** redefine concepts already in Mathlib (e.g. Prime, Squarefree, Coprime).
@@ -198,7 +198,7 @@ orm_num applies.
 
 - [ ] **Line Length**: All lines <= 100 characters (Get-Content <file> | ...).
 - [ ] **Axiom Hygiene**: Verified with #print axioms <thm> (standard Lean 4 core axioms only).
-- [ ] **Golfing Review**: Can any have block be compressed into omega, 
+- [ ] **Golfing Review**: Can any have block be compressed into grind / linarith, 
 ing, or 
 orm_num?
 - [ ] **Linter Cleanliness**: Runs clean under #lint with 0 errors and 0 warnings.

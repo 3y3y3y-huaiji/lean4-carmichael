@@ -25,16 +25,24 @@ the goal.
 
 | Domain / Problem | Idiomatic Tactic | Anti-Pattern (AI Fluff to Avoid) |
 | :--- | :--- | :--- |
-| **Natural/Integer Linear Arithmetic** | `omega` | Manually chaining `Nat.le_trans`, `Nat.add_le_add_right`, `Nat.lt_of_le_of_lt` |
+| **General Automated SMT / Arithmetic** | `grind` / `linarith` | Manually chaining `Nat.le_trans`, or relying on deprecated `omega` |
 | **Ring & Polynomial Identities** | `ring` | Manual `Nat.mul_add`, `Nat.add_assoc`, `Nat.mul_comm` rewrites |
 | **Modular Arithmetic & Subtraction** | `zify; grind` | Trying to prove (p-1) + (q-1)p = pq - 1 in Nat without handling underflow |
 | **Concrete Numerical Calculation** | `norm_num` | Manually evaluating 3 * 11 * 17 = 561 or prime factorization |
-| **Finite Domain / Bound Reflection** | `decide` | Writing manual induction or casing over 500 candidate numbers |
+| **Finite Domain / Bound Reflection** | `decide` | Writing manual induction or casing over candidate numbers |
 | **First-Order Logic & Finishing** | `grind` / `aesop` | 15 lines of nested `intro`, `cases`, `constructor`, `exact` |
+
+> [!WARNING]
+> **Deprecate `omega`**: Lean 4 and Mathlib are actively phasing out `omega` in favor of the next-generation `grind` engine (and `linarith` / `zify; grind`). All new formalizations must prefer `grind` or `linarith` over `omega`.
 
 ---
 
-## 2. The 5 Principles of Proof Golfing (Anti-AI Fluff)
+## 2. The 6 Principles of Proof Golfing (Anti-AI Fluff & Clean Architecture)
+
+### Rule 0: Strictly Zero Hardcoding (No Magic Constants or Hardcoded Lists)
+- **Zero Magic Numbers**: Never hardcode arbitrary tables, prime lists (e.g. `[2, 3, 5, 7, 11...]`), or magical case thresholds.
+- **Parametric & Mathematical**: All algorithms, sieves, and verifiers must be fully parameterized (e.g. `(p : ℕ)`, `(xs : List ℕ)`), working on arbitrary inputs or natural intervals (`List.Ico`).
+- **No Hand-Coded Candidate Elimination**: Do not write out hardcoded case-splits for specific integers. Everything must flow from general mathematical definitions and reflection.
 
 ### Rule 1: Never Reinvent Lemmas (Use Mathlib First)
 - Before writing any helper lemma, check if Mathlib already has it (`exact?`, `apply?`, or search Mathlib docs).
@@ -43,16 +51,16 @@ the goal.
 ### Rule 2: Eliminate Intermediate `have` Chains
 - **AI Anti-Pattern**: Creating 5 consecutive `have` steps that each merely feed into the next line:
   ```lean
-  -- ? BAD (AI style: 10 lines of fluff)
-  have h1 : a <= b := by omega
-  have h2 : b <= c := by omega
+  -- ❌ BAD (AI style: 10 lines of fluff)
+  have h1 : a <= b := by linarith
+  have h2 : b <= c := by linarith
   have h3 : a <= c := Nat.le_trans h1 h2
   exact h3
   ```
 - **Mathlib Idiomatic**:
   ```lean
-  -- ? GOOD (Mathlib style: 1 line)
-  omega
+  -- ✅ GOOD (Mathlib style: 1 line)
+  grind
   ```
 
 ### Rule 3: Transition to Integer Semantics (`zify`)
@@ -119,7 +127,7 @@ theorem IsCarmichael.three_le_card_primeFactors (h : IsCarmichael n) :
 Before submitting any code to Mathlib:
 - [ ] Are all line widths strictly ? 100 characters?
 - [ ] Did you search Mathlib for existing definitions before writing new ones?
-- [ ] Can any `have` block be replaced by `omega`, `ring`, `norm_num`, or `grind`?
+- [ ] Can any `have` block be replaced by `grind`, `linarith`, `ring`, or `norm_num`?
 - [ ] Are there natural number subtractions that can be simplified using `zify`?
 - [ ] Is computational reflection (`decide`) used for bounded finite checks?
 - [ ] Did you run `#lint` and ensure 0 warnings?
