@@ -11,3 +11,8 @@ require mathlib from git
 lean_lib «Carmichael» where
   globs := #[.andSubmodules `Carmichael]
 
+@[default_target]
+lean_lib «Penrose» where
+  globs := #[.andSubmodules `Penrose]
+
+
