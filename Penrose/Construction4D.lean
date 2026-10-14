@@ -70,14 +70,6 @@ theorem penrose_stairs_4d_realization :
     -- 3. Non-intersecting 4D embedding
     Function.Injective vertex4D := by
   refine ⟨by decide, by decide, by decide, rfl, rfl, rfl, rfl, ?_⟩
-  intro a b hab
-  match a, b with
-  | 0, 0 => rfl
-  | 1, 1 => rfl
-  | 2, 2 => rfl
-  | 3, 3 => rfl
-  | 0, 1 | 0, 2 | 0, 3
-  | 1, 0 | 1, 2 | 1, 3
-  | 2, 0 | 2, 1 | 2, 3
-  | 3, 0 | 3, 1 | 3, 2 =>
-    revert hab; decide +kernel
+  intro ⟨a, ha⟩ ⟨b, hb⟩ hab
+  revert a b ha hb hab
+  decide
