@@ -11,3 +11,6 @@ require mathlib from git
 lean_lib «Carmichael» where
   globs := #[.andSubmodules `Carmichael]
 
+@[default_target]
+lean_lib «Mahler32» where
+  globs := #[.andSubmodules `Mahler32]
